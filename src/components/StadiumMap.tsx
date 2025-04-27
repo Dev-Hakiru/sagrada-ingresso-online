@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -28,7 +27,7 @@ const generateSeats = (section: string, rows: string[], seatsPerRow: number, sta
         row,
         number: i,
         section,
-        status: 'available',
+        status: 'available' as const,
         price: startPrice - priceAdjustment
       });
     }
@@ -54,8 +53,8 @@ const StadiumMap: React.FC<StadiumMapProps> = ({ selectedSeats, onSeatSelect }) 
   const handleSeatClick = (seatId: string) => {
     const updatedSeats = seats.map((seat) => {
       if (seat.id === seatId) {
-        const isSelected = seat.status === 'selected';
-        const newStatus = isSelected ? 'available' : 'selected';
+        // Explicitly cast to the correct type
+        const newStatus: 'available' | 'selected' = seat.status === 'selected' ? 'available' : 'selected';
         const updatedSeat = { ...seat, status: newStatus };
         
         // Notify parent component about seat selection change
