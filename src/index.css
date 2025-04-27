@@ -1,3 +1,6 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,16 +16,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 157 79% 24%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
+    --secondary: 47 100% 62%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 183 69% 66%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -30,24 +33,17 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 157 79% 24%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -61,17 +57,17 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 157 79% 24%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 47 100% 62%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 183 69% 66%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -96,6 +92,59 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
+}
+
+.seat {
+  @apply w-6 h-6 md:w-8 md:h-8 m-0.5 rounded-t-lg cursor-pointer transition-all duration-200 flex items-center justify-center text-xs;
+}
+
+.seat-available {
+  @apply bg-sagrada-green text-white hover:bg-sagrada-lightGreen;
+}
+
+.seat-selected {
+  @apply bg-sagrada-yellow text-sagrada-gray hover:brightness-90;
+}
+
+.seat-unavailable {
+  @apply bg-gray-400 text-gray-600 cursor-not-allowed;
+}
+
+.stadium-container {
+  @apply overflow-auto max-w-full max-h-[500px] p-4;
+}
+
+.carousel-container {
+  @apply relative overflow-hidden h-[300px] md:h-[400px];
+}
+
+.carousel-slide {
+  @apply flex transition-transform duration-500 h-full;
+}
+
+.carousel-item {
+  @apply min-w-full h-full bg-cover bg-center relative;
+}
+
+.carousel-item::after {
+  content: "";
+  @apply absolute inset-0 bg-black bg-opacity-40;
+}
+
+.carousel-content {
+  @apply absolute inset-0 flex flex-col items-center justify-center z-10 text-white text-center px-4;
+}
+
+.btn-primary {
+  @apply bg-sagrada-green text-white px-6 py-2 rounded-md hover:bg-opacity-90 transition-all shadow-md;
+}
+
+.btn-secondary {
+  @apply bg-sagrada-yellow text-sagrada-gray px-6 py-2 rounded-md hover:bg-opacity-90 transition-all shadow-md;
+}
+
+.card {
+  @apply bg-white rounded-md shadow-md overflow-hidden border border-gray-100;
 }
