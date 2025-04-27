@@ -1,24 +1,10 @@
-
 import React from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Calendar, Download } from 'lucide-react';
 
-// Mock ticket data
-const tickets = [
-  {
-    id: 1,
-    gameTitle: 'Sagrada Esperança vs. Petro de Luanda',
-    date: '2025-06-15',
-    time: '15:00',
-    stadium: 'Estádio Sagrada Esperança',
-    seats: [
-      { section: 'VIP', row: 'A', number: 12, price: 10000 },
-      { section: 'VIP', row: 'A', number: 13, price: 10000 }
-    ],
-    status: 'active'
-  }
-];
+// Iniciar com uma array vazia para representar que não há bilhetes
+const tickets = [];
 
 const TicketsPage = () => {
   const formatDate = (dateString: string): string => {
