@@ -10,7 +10,12 @@ const Navbar = () => {
     <nav className="bg-sagrada-green text-white shadow-md fixed top-0 w-full z-50">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <Link to="/" className="flex items-center space-x-2">
-          <span className="font-bold text-xl">Sagrada Esperança</span>
+          <img 
+            src="/lovable-uploads/32aef663-dbd3-4fc8-8452-1f57449edc02.png" 
+            alt="GD Sagrada Esperança Logo" 
+            className="h-10 w-auto"
+          />
+          <span className="font-bold text-xl">GD Sagrada Esperança</span>
         </Link>
         
         {/* Mobile menu button */}

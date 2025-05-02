@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -7,7 +8,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-xl font-bold mb-3">Sagrada Esperança</h3>
+            <h3 className="text-xl font-bold mb-3">GD Sagrada Esperança</h3>
             <p className="text-gray-300">
               Estádio Sagrada Esperança, destino para os melhores eventos esportivos em Angola.
             </p>
@@ -15,9 +16,9 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-bold mb-3">Links Úteis</h3>
             <ul className="space-y-2">
-              <li><a href="/" className="hover:text-sagrada-yellow transition-colors">Home</a></li>
-              <li><a href="/games" className="hover:text-sagrada-yellow transition-colors">Jogos</a></li>
-              <li><a href="/support" className="hover:text-sagrada-yellow transition-colors">Suporte</a></li>
+              <li><Link to="/" className="hover:text-sagrada-yellow transition-colors">Home</Link></li>
+              <li><Link to="/games" className="hover:text-sagrada-yellow transition-colors">Jogos</Link></li>
+              <li><Link to="/support" className="hover:text-sagrada-yellow transition-colors">Suporte</Link></li>
             </ul>
           </div>
           <div>
