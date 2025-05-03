@@ -7,21 +7,91 @@ import { getGameById } from '@/data/games';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { Calendar } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const SeatSelectionPage = () => {
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { toast } = useToast();
   
   const [selectedSeats, setSelectedSeats] = useState<SeatType[]>([]);
   const [game, setGame] = useState(getGameById(Number(gameId)));
+  const [seatData, setSeatData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     if (!game) {
       // Game not found, redirect to games list
       navigate('/games');
+    } else {
+      fetchSeats();
     }
   }, [game, navigate]);
+  
+  const fetchSeats = async () => {
+    if (!gameId) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('seats')
+        .select('*')
+        .eq('game_id', gameId);
+        
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        setSeatData(data);
+      } else {
+        // Se não houver dados, inicializar os assentos no banco de dados
+        await initializeSeats();
+      }
+    } catch (error) {
+      console.error('Erro ao buscar assentos:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os assentos. Tente novamente mais tarde.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const initializeSeats = async () => {
+    try {
+      // Vamos usar a função SQL que criamos para inicializar os assentos
+      const { error } = await supabase.rpc('initialize_seats_for_game', {
+        game_id_param: gameId,
+        sections: ['A', 'B', 'C'],
+        rows_param: ['1', '2', '3', '4', '5'],
+        seats_per_row: 10
+      });
+      
+      if (error) throw error;
+      
+      // Buscar os assentos novamente após inicialização
+      const { data, error: fetchError } = await supabase
+        .from('seats')
+        .select('*')
+        .eq('game_id', gameId);
+      
+      if (fetchError) throw fetchError;
+      
+      if (data) {
+        setSeatData(data);
+      }
+    } catch (error) {
+      console.error('Erro ao inicializar assentos:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível inicializar os assentos. Tente novamente mais tarde.",
+        variant: "destructive"
+      });
+    }
+  };
   
   if (!game) {
     return null;
@@ -46,7 +116,7 @@ const SeatSelectionPage = () => {
     }
   };
   
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (selectedSeats.length > 0) {
       addToCart({
         gameId: game.id,
@@ -75,11 +145,18 @@ const SeatSelectionPage = () => {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md p-4 mb-6">
               <h2 className="text-xl font-semibold mb-4">Selecione seus assentos</h2>
-              <StadiumMap 
-                selectedSeats={selectedSeats} 
-                onSeatSelect={handleSeatSelect} 
-                gameId={game.id}
-              />
+              {loading ? (
+                <div className="flex justify-center items-center h-64">
+                  <p>Carregando assentos...</p>
+                </div>
+              ) : (
+                <StadiumMap 
+                  selectedSeats={selectedSeats} 
+                  onSeatSelect={handleSeatSelect} 
+                  gameId={game.id}
+                  seatData={seatData}
+                />
+              )}
             </div>
           </div>
           
