@@ -11,7 +11,7 @@ export const gamesData: Game[] = [
     category: "nacional",
     stadium: "Estádio Sagrada Esperança",
     price: 5000,
-    image: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1470"
+    image: "/lovable-uploads/35678844-34f6-4592-8707-f77be41d6fdc.png"
   },
   {
     id: 2,
@@ -22,7 +22,7 @@ export const gamesData: Game[] = [
     category: "nacional",
     stadium: "Estádio Sagrada Esperança",
     price: 5000,
-    image: "https://images.unsplash.com/photo-1459865264687-595d652de67e?q=80&w=1470"
+    image: "/lovable-uploads/17d04499-4990-49fc-8c27-27ce0a7e55e6.png"
   },
   {
     id: 3,
@@ -33,7 +33,7 @@ export const gamesData: Game[] = [
     category: "internacional",
     stadium: "Estádio Sagrada Esperança",
     price: 8000,
-    image: "https://images.unsplash.com/photo-1556056504-5c7696c4c28d?q=80&w=1476"
+    image: "/lovable-uploads/44a10e08-bf1f-47c1-8757-bf86513c32fa.png"
   },
   {
     id: 4,
@@ -44,7 +44,7 @@ export const gamesData: Game[] = [
     category: "nacional",
     stadium: "Estádio Sagrada Esperança",
     price: 5000,
-    image: "https://images.unsplash.com/photo-1550881111-7cfde14b8073?q=80&w=1470"
+    image: "/lovable-uploads/54339de4-a2f9-40eb-b9b4-b849c71b2498.png"
   },
   {
     id: 5,
@@ -55,7 +55,7 @@ export const gamesData: Game[] = [
     category: "internacional",
     stadium: "Estádio Sagrada Esperança",
     price: 8000,
-    image: "https://images.unsplash.com/photo-1577223625816-6cf3149ae747?q=80&w=1470"
+    image: "/lovable-uploads/34537056-bee3-4d8a-85b7-ce56582e10eb.png"
   },
   {
     id: 6,
@@ -66,7 +66,7 @@ export const gamesData: Game[] = [
     category: "nacional",
     stadium: "Estádio Sagrada Esperança",
     price: 5000,
-    image: "https://images.unsplash.com/photo-1542852869-c71151c612b4?q=80&w=1515"
+    image: "/lovable-uploads/25b35227-ad99-4fb0-adac-3acfa8ebf67d.png"
   },
   {
     id: 7,
@@ -77,18 +77,7 @@ export const gamesData: Game[] = [
     category: "nacional",
     stadium: "Estádio Sagrada Esperança",
     price: 5000,
-    image: "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?q=80&w=1470"
-  },
-  {
-    id: 8,
-    homeTeam: "Sagrada Esperança",
-    awayTeam: "FC Barcelona",
-    date: "2025-08-16",
-    time: "19:30",
-    category: "amistoso",
-    stadium: "Estádio Sagrada Esperança",
-    price: 10000,
-    image: "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?q=80&w=1473"
+    image: "/lovable-uploads/bfc13a0f-b819-425e-bd07-4f6f0d018a79.png"
   }
 ];
 

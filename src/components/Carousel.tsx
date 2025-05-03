@@ -16,21 +16,21 @@ const items: CarouselItem[] = [
     id: 1,
     title: "Sagrada Esperança vs. Petro de Luanda",
     description: "Final do Campeonato Angolano 2023",
-    image: "/lovable-uploads/imagem-06.jpg",
+    image: "/lovable-uploads/ff4e3d31-6b1b-491c-a1d3-b716f84633aa.png",
     link: "/games/1"
   },
   {
     id: 2,
     title: "Torneio Internacional Amistoso",
     description: "Sagrada Esperança enfrenta times da África do Sul",
-    image: "/lovable-uploads/imagem-05.jpg",
+    image: "/lovable-uploads/85c32fa7-4ef2-473c-bbb9-50645ee40a11.png",
     link: "/games/2"
   },
   {
     id: 3,
     title: "Campeonato Nacional de Angola",
     description: "Assista todos os jogos em casa do Sagrada Esperança",
-    image: "/lovable-uploads/imagem-01.jpg",
+    image: "/lovable-uploads/1bc77357-3a7c-4175-8fcb-534485bba8f5.png",
     link: "/games"
   }
 ];
