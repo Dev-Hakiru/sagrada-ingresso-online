@@ -75,7 +75,11 @@ const SeatSelectionPage = () => {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md p-4 mb-6">
               <h2 className="text-xl font-semibold mb-4">Selecione seus assentos</h2>
-              <StadiumMap selectedSeats={selectedSeats} onSeatSelect={handleSeatSelect} />
+              <StadiumMap 
+                selectedSeats={selectedSeats} 
+                onSeatSelect={handleSeatSelect} 
+                gameId={game.id}
+              />
             </div>
           </div>
           

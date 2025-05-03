@@ -36,6 +36,45 @@ export type Database = {
         }
         Relationships: []
       }
+      seats: {
+        Row: {
+          created_at: string
+          game_id: string
+          id: string
+          number: number
+          reserved_by: string | null
+          reserved_until: string | null
+          row: string
+          section: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          game_id: string
+          id?: string
+          number: number
+          reserved_by?: string | null
+          reserved_until?: string | null
+          row: string
+          section: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          game_id?: string
+          id?: string
+          number?: number
+          reserved_by?: string | null
+          reserved_until?: string | null
+          row?: string
+          section?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tickets: {
         Row: {
           created_at: string
@@ -77,7 +116,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      initialize_seats_for_game: {
+        Args: {
+          game_id_param: string
+          sections: string[]
+          rows_param: string[]
+          seats_per_row: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

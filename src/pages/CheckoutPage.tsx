@@ -53,6 +53,7 @@ const CheckoutPage = () => {
           seats: item.seats
         };
         
+        // 1. Inserir o bilhete na tabela tickets
         const { error } = await supabase
           .from('tickets')
           .insert(ticketData);
@@ -60,6 +61,21 @@ const CheckoutPage = () => {
         if (error) {
           console.error("Erro ao salvar bilhete:", error);
           throw new Error(`Erro ao salvar bilhete: ${error.message}`);
+        }
+        
+        // 2. Atualizar o status dos assentos para 'sold'
+        for (const seat of item.seats) {
+          // Só atualiza se tivermos um id de banco de dados válido (não um id local)
+          if (seat.id && !seat.id.includes('-')) {
+            const { error: seatError } = await supabase
+              .from('seats')
+              .update({ status: 'sold' })
+              .eq('id', seat.id);
+              
+            if (seatError) {
+              console.error(`Erro ao atualizar assento ${seat.id}:`, seatError);
+            }
+          }
         }
       }
       
