@@ -36,6 +36,42 @@ export type Database = {
         }
         Relationships: []
       }
+      tickets: {
+        Row: {
+          created_at: string
+          date: string
+          game_id: string
+          game_title: string
+          id: string
+          seats: Json
+          stadium: string
+          time: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          game_id: string
+          game_title: string
+          id?: string
+          seats: Json
+          stadium: string
+          time: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          game_id?: string
+          game_title?: string
+          id?: string
+          seats?: Json
+          stadium?: string
+          time?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

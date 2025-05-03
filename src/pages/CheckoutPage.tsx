@@ -8,9 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const CheckoutPage = () => {
   const { items, totalPrice, clearCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
   
   const [paymentMethod, setPaymentMethod] = useState('multicaixa');
@@ -26,17 +29,50 @@ const CheckoutPage = () => {
     return null;
   }
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast.error("Você precisa estar logado para finalizar a compra");
+      navigate('/login');
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
+    try {
+      // Para cada jogo no carrinho, vamos criar um bilhete
+      for (const item of items) {
+        const ticketData = {
+          user_id: user.id,
+          game_id: item.gameId.toString(),
+          game_title: item.gameTitle,
+          date: item.date,
+          time: item.time,
+          stadium: "Estádio Nacional 11 de Novembro", // Poderíamos obter isso de um objeto game se disponível
+          seats: item.seats
+        };
+        
+        const { error } = await supabase
+          .from('tickets')
+          .insert(ticketData);
+        
+        if (error) {
+          console.error("Erro ao salvar bilhete:", error);
+          throw new Error(`Erro ao salvar bilhete: ${error.message}`);
+        }
+      }
+      
       toast.success("Pagamento processado com sucesso! Seus bilhetes estão prontos.");
       clearCart();
       navigate('/tickets');
+    } catch (error: any) {
+      toast.error("Erro ao processar pagamento", {
+        description: error.message || "Tente novamente mais tarde"
+      });
+    } finally {
       setIsSubmitting(false);
-    }, 2000);
+    }
   };
 
   return (
