@@ -47,7 +47,21 @@ const TicketsPage = () => {
           throw error;
         }
         
-        setTickets(data || []);
+        // Transform the data to match the Ticket interface
+        // The main issue is that seats is stored as JSON in the database
+        // but we need it as a Seat[] array in our component
+        const transformedTickets: Ticket[] = (data || []).map((ticket: any) => ({
+          id: ticket.id,
+          game_title: ticket.game_title,
+          date: ticket.date,
+          time: ticket.time,
+          stadium: ticket.stadium,
+          seats: Array.isArray(ticket.seats) ? ticket.seats : [],
+          created_at: ticket.created_at,
+          game_id: ticket.game_id
+        }));
+        
+        setTickets(transformedTickets);
       } catch (error: any) {
         console.error('Erro ao carregar bilhetes:', error);
         toast.error('Erro ao carregar bilhetes', {
