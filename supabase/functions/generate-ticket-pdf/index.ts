@@ -83,12 +83,59 @@ serve(async (req) => {
     doc.text("ID da Compra: " + ticketData.purchaseId, 125, 95);
     doc.text("Emitido em: " + new Date().toLocaleDateString('pt-BR'), 125, 105);
     
-    // QR Code (simulado)
-    doc.setDrawColor(0);
-    doc.setFillColor(240, 240, 240);
-    doc.roundedRect(150, 110, 30, 30, 2, 2, "FD");
-    doc.setFontSize(6);
-    doc.text("Código QR do Bilhete", 165, 127, { align: "center" });
+    // Adicionar imagem do bilhete de acordo com o jogo e setor
+    // Jogos 1, 3 e 5 terão imagens diferentes
+    let imagePath = '';
+    
+    // Determinar qual imagem usar baseada no gameId e setor
+    if (ticketData.gameId === 1) { // Primeiro jogo
+      if (ticketData.sector === 'A') { // VIP
+        imagePath = '/lovable-uploads/baed7d58-3282-4575-b27d-36e04fee7f88.png'; // VIP1
+      } else if (ticketData.sector === 'B') { // Normal Esquerda
+        imagePath = '/lovable-uploads/4c4a649b-1429-427e-b9cd-153a70b7cd82.png'; // 001
+      } else { // Normal Direita
+        imagePath = '/lovable-uploads/f84e6724-2bc7-4c7d-a8d8-a3c63b731d44.png'; // 01
+      }
+    } else if (ticketData.gameId === 3) { // Terceiro jogo
+      if (ticketData.sector === 'A') { // VIP
+        imagePath = '/lovable-uploads/4d81cb46-6e46-4286-b958-a44c1e3a0d7c.png'; // VIP2
+      } else if (ticketData.sector === 'B') { // Normal Esquerda
+        imagePath = '/lovable-uploads/7ac42e4e-5a81-46ce-8f20-cbff78bb541c.png'; // 002
+      } else { // Normal Direita
+        imagePath = '/lovable-uploads/050a8987-360c-49c0-9318-db0a012a25ca.png'; // 02
+      }
+    } else if (ticketData.gameId === 5) { // Quinto jogo
+      if (ticketData.sector === 'A') { // VIP
+        imagePath = '/lovable-uploads/3b8d2e1a-3960-4887-9b9d-34d285177e28.png'; // VIP3
+      } else if (ticketData.sector === 'B') { // Normal Esquerda
+        imagePath = '/lovable-uploads/f4cb1efb-1298-4516-a950-048787549d25.png'; // 003
+      } else { // Normal Direita
+        imagePath = '/lovable-uploads/80431cd5-6ae3-4a9c-917c-975bf4b11a61.png'; // 03
+      }
+    }
+    
+    // Se tiver uma imagem definida, adicionar um retângulo simulando o ingresso visual
+    if (imagePath) {
+      // Adicionar uma representação visual do bilhete
+      doc.setDrawColor(20, 130, 60);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(150, 110, 30, 20, 2, 2, 'S');
+      doc.setFontSize(7);
+      doc.text(`* Este bilhete contém uma imagem visual`, 165, 127, { align: "center" });
+      doc.text(`disponível no site`, 165, 131, { align: "center" });
+    } else {
+      // QR Code (simulado)
+      doc.setDrawColor(0);
+      doc.setFillColor(240, 240, 240);
+      doc.roundedRect(150, 110, 30, 30, 2, 2, "FD");
+      doc.setFontSize(6);
+      doc.text("Código QR do Bilhete", 165, 127, { align: "center" });
+    }
+    
+    // Adicionar informações adicionais sobre o estádio
+    doc.setFontSize(8);
+    doc.text("Estádio: " + ticketData.stadium, 105, 115, { align: "center" });
+    doc.text("Portal de Entrada: De acordo com seu setor", 105, 120, { align: "center" });
     
     // Rodapé
     doc.setFontSize(10);

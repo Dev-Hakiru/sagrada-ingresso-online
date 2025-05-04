@@ -97,7 +97,8 @@ const TicketsPage = () => {
         seat: seat.number,
         price: seat.price,
         stadium: ticket.stadium,
-        purchaseId: ticket.id.slice(0, 8).toUpperCase()
+        purchaseId: ticket.id.slice(0, 8).toUpperCase(),
+        gameId: parseInt(ticket.game_id) // Convertendo para número para verificação na função Edge
       };
       
       // Chamar a função Edge para gerar o PDF
