@@ -27,10 +27,11 @@ const SEAT_COLORS = {
   selected: 'bg-blue-500'
 };
 
+// Preços atualizados para as diferentes seções
 const SEAT_PRICES = {
   A: 10000, // VIP
-  B: 7500,  // Central
-  C: 5000   // Lateral
+  B: 5000,  // Normal Esquerda
+  C: 5000   // Normal Direita
 };
 
 const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: StadiumMapProps) => {
@@ -249,7 +250,11 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
 
       {Object.keys(seats).sort().map(section => (
         <div key={section} className="mb-8">
-          <h3 className="text-lg font-semibold mb-2">Seção {section} - {section === 'A' ? 'VIP' : section === 'B' ? 'Central' : 'Lateral'}</h3>
+          <h3 className="text-lg font-semibold mb-2">Seção {section} - {
+            section === 'A' ? 'VIP (10.000 AOA)' : 
+            section === 'B' ? 'Normal Esquerda (5.000 AOA)' : 
+            'Normal Direita (5.000 AOA)'
+          }</h3>
           <div className="grid gap-4">
             {Object.keys(seats[section]).sort().map(row => (
               <div key={`${section}-${row}`} className="flex items-center gap-2">

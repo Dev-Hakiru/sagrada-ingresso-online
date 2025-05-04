@@ -117,12 +117,21 @@ export type Database = {
     }
     Functions: {
       initialize_seats_for_game: {
-        Args: {
-          game_id_param: string
-          sections: string[]
-          rows_param: string[]
-          seats_per_row: number
-        }
+        Args:
+          | {
+              game_id_param: string
+              sections: string[]
+              rows_param: string[]
+              seats_per_row: number
+            }
+          | {
+              game_id_param: string
+              vip_rows: string[]
+              normal_left_rows: string[]
+              normal_right_rows: string[]
+              vip_seats_per_row: number
+              normal_seats_per_row: number
+            }
         Returns: undefined
       }
     }

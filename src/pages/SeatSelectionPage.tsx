@@ -45,7 +45,7 @@ const SeatSelectionPage = () => {
       if (data && data.length > 0) {
         setSeatData(data);
       } else {
-        // Se não houver dados, inicializar os assentos no banco de dados
+        // Se não houver dados, inicializar os assentos no banco de dados usando a nova função
         await initializeSeats();
       }
     } catch (error) {
@@ -62,12 +62,21 @@ const SeatSelectionPage = () => {
   
   const initializeSeats = async () => {
     try {
-      // Vamos usar a função SQL que criamos para inicializar os assentos
+      // Definir os parâmetros para as áreas VIP e normais
+      const vipRows = ['1', '2', '3'];  // 3 fileiras VIP com 28 assentos cada = 84 assentos VIP
+      const normalLeftRows = ['1', '2', '3', '4', '5'];  // 5 fileiras na área normal esquerda
+      const normalRightRows = ['1', '2', '3', '4', '5'];  // 5 fileiras na área normal direita
+      const vipSeatsPerRow = 28;  // 28 assentos por fileira VIP
+      const normalSeatsPerRow = 20;  // 20 assentos por fileira normal (20 x 5 x 2 = 200 assentos normais)
+      
+      // Chamar a função RPC para inicializar os assentos
       const { error } = await supabase.rpc('initialize_seats_for_game', {
         game_id_param: gameId,
-        sections: ['A', 'B', 'C'],
-        rows_param: ['1', '2', '3', '4', '5'],
-        seats_per_row: 10
+        vip_rows: vipRows,
+        normal_left_rows: normalLeftRows,
+        normal_right_rows: normalRightRows,
+        vip_seats_per_row: vipSeatsPerRow,
+        normal_seats_per_row: normalSeatsPerRow
       });
       
       if (error) throw error;
