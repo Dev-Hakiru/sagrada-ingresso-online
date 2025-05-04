@@ -55,7 +55,7 @@ export const gamesData: Game[] = [
     category: "internacional",
     stadium: "Estádio Sagrada Esperança",
     price: 8000,
-    image: "/lovable-uploads/25b35227-ad99-4fb0-adac-3acfa8ebf67d.png"
+    image: "/lovable-uploads/bfc13a0f-b819-425e-bd07-4f6f0d018a79.png"
   },
   {
     id: 6,
@@ -66,7 +66,7 @@ export const gamesData: Game[] = [
     category: "nacional",
     stadium: "Estádio Sagrada Esperança",
     price: 5000,
-    image: "/lovable-uploads/bfc13a0f-b819-425e-bd07-4f6f0d018a79.png"
+    image: "/lovable-uploads/34537056-bee3-4d8a-85b7-ce56582e10eb.png"
   },
   {
     id: 7,
@@ -77,7 +77,7 @@ export const gamesData: Game[] = [
     category: "nacional",
     stadium: "Estádio Sagrada Esperança",
     price: 5000,
-    image: "/lovable-uploads/34537056-bee3-4d8a-85b7-ce56582e10eb.png"
+    image: "/lovable-uploads/25b35227-ad99-4fb0-adac-3acfa8ebf67d.png"
   }
 ];
 
