@@ -41,6 +41,7 @@ export type Database = {
           created_at: string
           game_id: string
           id: string
+          imagem_url: string | null
           number: number
           reserved_by: string | null
           reserved_until: string | null
@@ -53,6 +54,7 @@ export type Database = {
           created_at?: string
           game_id: string
           id?: string
+          imagem_url?: string | null
           number: number
           reserved_by?: string | null
           reserved_until?: string | null
@@ -65,6 +67,7 @@ export type Database = {
           created_at?: string
           game_id?: string
           id?: string
+          imagem_url?: string | null
           number?: number
           reserved_by?: string | null
           reserved_until?: string | null

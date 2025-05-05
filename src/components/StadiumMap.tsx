@@ -114,7 +114,7 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
         section: dbSeat.section,
         row: dbSeat.row,
         number: dbSeat.number,
-        status: isSelected ? 'selected' : currentStatus,
+        status: isSelected ? 'selected' : (currentStatus === 'sold' ? 'sold' : 'available'),
         price: SEAT_PRICES[dbSeat.section as keyof typeof SEAT_PRICES] || 5000
       };
       
@@ -155,15 +155,6 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
       return;
     }
     
-    if (seat.status === 'reserved' && !selectedSeats.some(s => s.id === seat.id)) {
-      toast({
-        title: "Assento indisponível",
-        description: "Este assento está reservado por outro usuário",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     setLoading(true);
     
     try {
@@ -190,11 +181,11 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
         const reservationTime = new Date();
         reservationTime.setMinutes(reservationTime.getMinutes() + 15);
         
-        // Update the seat status to reserved in the database
+        // Update the seat status to selected in the database
         const { error } = await supabase
           .from('seats')
           .update({ 
-            status: 'reserved',
+            status: 'selected',
             reserved_by: user.id,
             reserved_until: reservationTime.toISOString()
           })
@@ -233,10 +224,6 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
             <span className="text-sm">Selecionado</span>
           </div>
           <div className="flex items-center">
-            <div className={`w-4 h-4 ${SEAT_COLORS.reserved} rounded-sm mr-1`}></div>
-            <span className="text-sm">Reservado</span>
-          </div>
-          <div className="flex items-center">
             <div className={`w-4 h-4 ${SEAT_COLORS.sold} rounded-sm mr-1`}></div>
             <span className="text-sm">Vendido</span>
           </div>
@@ -265,7 +252,7 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
                   {seats[section][row].map(seat => (
                     <button
                       key={seat.id}
-                      disabled={loading || seat.status === 'sold' || (seat.status === 'reserved' && !selectedSeats.some(s => s.id === seat.id))}
+                      disabled={loading || seat.status === 'sold'}
                       className={`w-7 h-7 rounded-sm flex items-center justify-center text-xs text-white ${SEAT_COLORS[seat.status]} hover:opacity-80 transition-opacity disabled:cursor-not-allowed`}
                       onClick={() => handleSeatClick(seat)}
                     >

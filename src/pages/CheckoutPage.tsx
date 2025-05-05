@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -65,16 +64,16 @@ const CheckoutPage = () => {
         
         // 2. Atualizar o status dos assentos para 'sold'
         for (const seat of item.seats) {
-          // Só atualiza se tivermos um id de banco de dados válido (não um id local)
-          if (seat.id && !seat.id.includes('-')) {
-            const { error: seatError } = await supabase
-              .from('seats')
-              .update({ status: 'sold' })
-              .eq('id', seat.id);
+          const { error: seatError } = await supabase
+            .from('seats')
+            .update({ 
+              status: 'sold',
+              reserved_by: user.id 
+            })
+            .eq('id', seat.id);
               
-            if (seatError) {
-              console.error(`Erro ao atualizar assento ${seat.id}:`, seatError);
-            }
+          if (seatError) {
+            console.error(`Erro ao atualizar assento ${seat.id}:`, seatError);
           }
         }
       }

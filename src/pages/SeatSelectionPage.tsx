@@ -43,7 +43,14 @@ const SeatSelectionPage = () => {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        setSeatData(data);
+        // Make sure all seats are available unless they've been purchased
+        const updatedData = data.map(seat => ({
+          ...seat,
+          status: seat.status === 'sold' ? 'sold' : 'available',
+          reserved_by: seat.status === 'sold' ? seat.reserved_by : null,
+          reserved_until: seat.status === 'sold' ? seat.reserved_until : null,
+        }));
+        setSeatData(updatedData);
       } else {
         // Se não houver dados, inicializar os assentos no banco de dados usando a nova função
         await initializeSeats();
@@ -90,7 +97,14 @@ const SeatSelectionPage = () => {
       if (fetchError) throw fetchError;
       
       if (data) {
-        setSeatData(data);
+        // Make sure all seats are available 
+        const initialSeats = data.map(seat => ({
+          ...seat,
+          status: 'available',
+          reserved_by: null,
+          reserved_until: null,
+        }));
+        setSeatData(initialSeats);
       }
     } catch (error) {
       console.error('Erro ao inicializar assentos:', error);
@@ -138,6 +152,10 @@ const SeatSelectionPage = () => {
       navigate('/cart');
     }
   };
+
+  if (!game) {
+    return null;
+  }
 
   return (
     <Layout>
