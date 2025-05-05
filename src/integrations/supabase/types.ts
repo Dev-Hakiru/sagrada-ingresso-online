@@ -36,6 +36,27 @@ export type Database = {
         }
         Relationships: []
       }
+      seat_images: {
+        Row: {
+          codigo_bilhete: string
+          created_at: string
+          id: string
+          imagem_url: string
+        }
+        Insert: {
+          codigo_bilhete: string
+          created_at?: string
+          id?: string
+          imagem_url: string
+        }
+        Update: {
+          codigo_bilhete?: string
+          created_at?: string
+          id?: string
+          imagem_url?: string
+        }
+        Relationships: []
+      }
       seats: {
         Row: {
           created_at: string
