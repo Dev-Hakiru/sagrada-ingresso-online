@@ -40,7 +40,7 @@ const Index = () => {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
               <img 
-                src="https://images.unsplash.com/photo-1499604193696-d8d50fabd2be?q=80&w=1470&auto=format&fit=crop" 
+                src="/lovable-uploads/007bb97b-415b-4d42-bf61-d334b326afb9.png" 
                 alt="Estádio Sagrada Esperança" 
                 className="rounded-lg shadow-lg w-full"
               />

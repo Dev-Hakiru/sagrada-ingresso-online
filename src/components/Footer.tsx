@@ -10,26 +10,12 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="flex flex-col items-center md:items-start">
             <h3 className="text-xl font-bold mb-3">GD Sagrada Esperança</h3>
-            <div className="mb-3 w-full max-w-[200px] overflow-hidden rounded">
-              <img 
-                src="/lovable-uploads/imagem-06.jpg" 
-                alt="Estádio Sagrada Esperança" 
-                className="w-full h-auto transition-transform hover:scale-105"
-              />
-            </div>
             <p className="text-gray-300 text-center md:text-left">
               Estádio Sagrada Esperança, destino para os melhores eventos esportivos em Angola.
             </p>
           </div>
           <div className="flex flex-col items-center md:items-start">
             <h3 className="text-lg font-bold mb-3">Links Úteis</h3>
-            <div className="mb-3 w-full max-w-[200px] overflow-hidden rounded">
-              <img 
-                src="/lovable-uploads/imagem-05.jpg" 
-                alt="Futebol em Angola" 
-                className="w-full h-auto transition-transform hover:scale-105"
-              />
-            </div>
             <ul className="space-y-2 text-center md:text-left">
               <li><Link to="/" className="hover:text-sagrada-yellow transition-colors">Home</Link></li>
               <li><Link to="/games" className="hover:text-sagrada-yellow transition-colors">Jogos</Link></li>
@@ -38,13 +24,6 @@ const Footer = () => {
           </div>
           <div className="flex flex-col items-center md:items-start">
             <h3 className="text-lg font-bold mb-3">Contato</h3>
-            <div className="mb-3 w-full max-w-[200px] overflow-hidden rounded">
-              <img 
-                src="/lovable-uploads/imagem-01.jpg" 
-                alt="Contato Sagrada Esperança" 
-                className="w-full h-auto transition-transform hover:scale-105"
-              />
-            </div>
             <div className="space-y-2 text-center md:text-left">
               <p className="flex items-center justify-center md:justify-start text-gray-300">
                 <MapPin size={16} className="mr-2" />
