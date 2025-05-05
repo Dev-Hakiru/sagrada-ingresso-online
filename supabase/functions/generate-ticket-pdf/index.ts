@@ -43,6 +43,55 @@ serve(async (req) => {
       throw new Error("Erro ao buscar dados do usuário");
     }
 
+    // Determinar qual imagem buscar baseada no gameId e setor
+    let imagemCodigo;
+    
+    if (ticketData.gameId === 1) { // Primeiro jogo
+      if (ticketData.sector === 'A') { // VIP
+        imagemCodigo = "VIP1";
+      } else if (ticketData.sector === 'B') { // Normal Esquerda
+        imagemCodigo = "001";
+      } else { // Normal Direita
+        imagemCodigo = "01";
+      }
+    } else if (ticketData.gameId === 3) { // Terceiro jogo
+      if (ticketData.sector === 'A') { // VIP
+        imagemCodigo = "VIP2";
+      } else if (ticketData.sector === 'B') { // Normal Esquerda
+        imagemCodigo = "002";
+      } else { // Normal Direita
+        imagemCodigo = "02";
+      }
+    } else if (ticketData.gameId === 5) { // Quinto jogo
+      if (ticketData.sector === 'A') { // VIP
+        imagemCodigo = "VIP3";
+      } else if (ticketData.sector === 'B') { // Normal Esquerda
+        imagemCodigo = "003";
+      } else { // Normal Direita
+        imagemCodigo = "03";
+      }
+    }
+
+    // Buscar a URL da imagem do bilhete no banco de dados
+    const { data: imagemData, error: imagemError } = await supabase
+      .from('seat_images')
+      .select('imagem_url')
+      .eq('codigo_bilhete', imagemCodigo)
+      .single();
+      
+    let imagemBase64 = null;
+    if (!imagemError && imagemData?.imagem_url) {
+      try {
+        // Buscar a imagem e converter para base64
+        const response = await fetch(imagemData.imagem_url);
+        const imageBlob = await response.blob();
+        const arrayBuffer = await imageBlob.arrayBuffer();
+        imagemBase64 = Buffer.from(arrayBuffer).toString('base64');
+      } catch (error) {
+        console.error("Erro ao buscar imagem:", error);
+      }
+    }
+
     // Criar o documento PDF
     const doc = new jsPDF({
       orientation: "landscape",
@@ -88,43 +137,36 @@ serve(async (req) => {
     doc.text("Estádio: " + ticketData.stadium, 105, 115, { align: "center" });
     doc.text("Portal de Entrada: De acordo com seu setor", 105, 120, { align: "center" });
 
-    // Determinar qual imagem usar baseada no gameId e setor
-    let imageBase64;
-    
-    if (ticketData.gameId === 1) { // Primeiro jogo
-      if (ticketData.sector === 'A') { // VIP
-        imageBase64 = "VIP1"; // Representando VIP1
-      } else if (ticketData.sector === 'B') { // Normal Esquerda
-        imageBase64 = "001"; // Representando 001
-      } else { // Normal Direita
-        imageBase64 = "01"; // Representando 01
+    // Adicionar a imagem do bilhete se estiver disponível
+    if (imagemBase64) {
+      try {
+        doc.addImage(
+          `data:image/jpeg;base64,${imagemBase64}`, 
+          'JPEG', 
+          150, // x position
+          110, // y position
+          30,  // width
+          20   // height
+        );
+      } catch (error) {
+        console.error("Erro ao adicionar imagem ao PDF:", error);
+        // Desenhar um placeholder caso a imagem falhe
+        doc.setDrawColor(20, 130, 60);
+        doc.setFillColor(240, 240, 240);
+        doc.roundedRect(150, 110, 30, 20, 2, 2, "FD");
+        doc.setFontSize(8);
+        doc.text(`${imagemCodigo || "Bilhete"}`, 165, 120, { align: "center" });
       }
-    } else if (ticketData.gameId === 3) { // Terceiro jogo
-      if (ticketData.sector === 'A') { // VIP
-        imageBase64 = "VIP2"; // Representando VIP2
-      } else if (ticketData.sector === 'B') { // Normal Esquerda
-        imageBase64 = "002"; // Representando 002
-      } else { // Normal Direita
-        imageBase64 = "02"; // Representando 02
-      }
-    } else if (ticketData.gameId === 5) { // Quinto jogo
-      if (ticketData.sector === 'A') { // VIP
-        imageBase64 = "VIP3"; // Representando VIP3
-      } else if (ticketData.sector === 'B') { // Normal Esquerda
-        imageBase64 = "003"; // Representando 003
-      } else { // Normal Direita
-        imageBase64 = "03"; // Representando 03
-      }
+    } else {
+      // Desenhar o placeholder para a imagem do ingresso
+      doc.setDrawColor(20, 130, 60);
+      doc.setFillColor(240, 240, 240);
+      doc.roundedRect(150, 110, 30, 20, 2, 2, "FD");
+      doc.setFontSize(8);
+      doc.text(`${imagemCodigo || "Bilhete"}`, 165, 120, { align: "center" });
+      doc.setFontSize(6);
+      doc.text("ID Visual do Bilhete", 165, 127, { align: "center" });
     }
-    
-    // Desenhar o placeholder para a imagem do ingresso
-    doc.setDrawColor(20, 130, 60);
-    doc.setFillColor(240, 240, 240);
-    doc.roundedRect(150, 110, 30, 20, 2, 2, "S");
-    doc.setFontSize(8);
-    doc.text(`${imageBase64 || "Bilhete"}`, 165, 120, { align: "center" });
-    doc.setFontSize(6);
-    doc.text("ID Visual do Bilhete", 165, 127, { align: "center" });
     
     // Rodapé
     doc.setFontSize(10);

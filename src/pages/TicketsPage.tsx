@@ -6,7 +6,7 @@ import { Calendar, Download } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import TicketCard from '@/components/TicketCard';
 
 interface Seat {
   id: string;
@@ -48,8 +48,6 @@ const TicketsPage = () => {
         }
         
         // Transform the data to match the Ticket interface
-        // The main issue is that seats is stored as JSON in the database
-        // but we need it as a Seat[] array in our component
         const transformedTickets: Ticket[] = (data || []).map((ticket: any) => ({
           id: ticket.id,
           game_title: ticket.game_title,
@@ -140,6 +138,48 @@ const TicketsPage = () => {
     }
   };
 
+  const handleCancelPurchase = async (ticketId: string) => {
+    // This function will be used by the TicketCard component
+    // Implementation is handled by CancelPurchaseButton
+    // We just need to refresh the tickets list after cancellation
+    fetchTickets();
+  };
+  
+  // Function to refresh tickets data after cancellation
+  const fetchTickets = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      const transformedTickets = (data || []).map((ticket: any) => ({
+        id: ticket.id,
+        game_title: ticket.game_title,
+        date: ticket.date,
+        time: ticket.time,
+        stadium: ticket.stadium,
+        seats: Array.isArray(ticket.seats) ? ticket.seats : [],
+        created_at: ticket.created_at,
+        game_id: ticket.game_id
+      }));
+      
+      setTickets(transformedTickets);
+    } catch (error: any) {
+      console.error('Erro ao atualizar bilhetes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -158,44 +198,30 @@ const TicketsPage = () => {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-6">
             {tickets.map((ticket) => (
-              <div 
-                key={ticket.id} 
-                className="bg-white rounded-lg shadow-md overflow-hidden border-t-4 border-sagrada-green"
-              >
-                <div className="p-5">
-                  <div className="flex justify-between items-start">
-                    <h2 className="font-bold text-lg">{ticket.game_title}</h2>
-                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-md">Ativo</span>
-                  </div>
-                  
-                  <div className="flex items-center text-gray-600 my-2">
-                    <Calendar size={16} className="mr-1" />
-                    <span className="text-sm">{formatDate(ticket.date)} às {ticket.time}</span>
-                  </div>
-                  
-                  <p className="text-gray-600 text-sm">{ticket.stadium}</p>
-                  
-                  <div className="mt-4">
-                    <h3 className="font-medium text-sm mb-1">Assentos</h3>
-                    <div className="space-y-1">
-                      {ticket.seats.map((seat, idx) => (
-                        <div key={idx} className="text-sm flex justify-between items-center">
-                          <span>{seat.section} - Fila {seat.row}, Assento {seat.number}</span>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="p-1 h-auto" 
-                            onClick={() => handleDownloadTicket(ticket, seat)}
-                          >
-                            <Download size={16} />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+              <div key={ticket.id}>
+                {ticket.seats.map((seat, idx) => (
+                  <TicketCard
+                    key={`${ticket.id}-${idx}`}
+                    ticket={{
+                      id: `${ticket.id}-${idx}`,
+                      purchaseId: ticket.id,
+                      gameId: parseInt(ticket.game_id),
+                      homeTeam: ticket.game_title.split(' vs ')[0],
+                      awayTeam: ticket.game_title.split(' vs ')[1],
+                      date: ticket.date,
+                      time: ticket.time,
+                      stadium: ticket.stadium,
+                      sector: seat.section,
+                      row: seat.row,
+                      seat: seat.number.toString(),
+                      price: seat.price
+                    }}
+                    onDownload={() => handleDownloadTicket(ticket, seat)}
+                    onCancel={() => fetchTickets()}
+                  />
+                ))}
               </div>
             ))}
           </div>
