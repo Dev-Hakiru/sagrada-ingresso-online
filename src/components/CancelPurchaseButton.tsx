@@ -12,6 +12,15 @@ type CancelPurchaseButtonProps = {
   onCancel: () => void;
 };
 
+// Define a type for the seat object structure
+interface Seat {
+  id: string;
+  row: string;
+  number: number;
+  section: string;
+  price: number;
+}
+
 const CancelPurchaseButton = ({ purchaseId, onCancel }: CancelPurchaseButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,8 +52,10 @@ const CancelPurchaseButton = ({ purchaseId, onCancel }: CancelPurchaseButtonProp
 
       // 2. Para cada assento no bilhete, atualizar o status para 'available'
       if (ticketData.seats && Array.isArray(ticketData.seats)) {
-        for (const seat of ticketData.seats) {
-          if (seat && seat.id) {
+        for (const seatItem of ticketData.seats) {
+          // Type guard to check if the seat has an id property and is an object
+          if (seatItem && typeof seatItem === 'object' && 'id' in seatItem) {
+            const seat = seatItem as Seat;
             const { error: seatError } = await supabase
               .from('seats')
               .update({
