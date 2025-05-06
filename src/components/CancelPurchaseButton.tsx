@@ -52,7 +52,7 @@ const CancelPurchaseButton = ({ purchaseId, onCancel }: CancelPurchaseButtonProp
 
       // 2. Para cada assento no bilhete, atualizar o status para 'available'
       if (ticketData.seats && Array.isArray(ticketData.seats)) {
-        for (const seatItem of ticketData.seats) {
+        const seatUpdates = ticketData.seats.map((seatItem: any) => {
           // Type guard to check if the seat is an object
           if (seatItem && typeof seatItem === 'object') {
             const seatObj = seatItem as Record<string, any>;
@@ -73,7 +73,8 @@ const CancelPurchaseButton = ({ purchaseId, onCancel }: CancelPurchaseButtonProp
                 price: seatObj.price
               };
               
-              const { error: seatError } = await supabase
+              // Return a promise for updating this seat
+              return supabase
                 .from('seats')
                 .update({
                   status: 'available',
@@ -81,21 +82,20 @@ const CancelPurchaseButton = ({ purchaseId, onCancel }: CancelPurchaseButtonProp
                   reserved_until: null
                 })
                 .eq('id', seat.id);
-              
-              if (seatError) {
-                console.error(`Erro ao liberar assento ${seat.id}:`, seatError);
-              }
             }
           }
-        }
+          return null;
+        }).filter(Boolean);
+        
+        // Execute all seat updates in parallel
+        await Promise.all(seatUpdates);
       }
 
-      // 3. Excluir o registro do bilhete
+      // 3. Excluir o registro do bilhete - Ensuring this completes
       const { error: deleteError } = await supabase
         .from('tickets')
         .delete()
-        .eq('id', purchaseId)
-        .eq('user_id', user.id);
+        .eq('id', purchaseId);
       
       if (deleteError) {
         throw deleteError;
@@ -106,17 +106,15 @@ const CancelPurchaseButton = ({ purchaseId, onCancel }: CancelPurchaseButtonProp
         description: "A sua compra foi cancelada com sucesso e os assentos estão disponíveis novamente.",
       });
       
-      // Call the onCancel callback to refresh the tickets list in the parent component
-      // Close the dialog first, then trigger refresh with a short delay to ensure
-      // the deletion has completed in the database
+      // First close the dialog 
       setIsOpen(false);
       
-      // Wait a moment before triggering the refresh to ensure deletion has completed
+      // Trigger the refresh callback with a delay to ensure database operations have completed
       setTimeout(() => {
         onCancel();
-      }, 300);
+      }, 500);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao cancelar a compra:", error);
       toast({
         title: "Erro",

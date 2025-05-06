@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -31,6 +30,7 @@ const TicketsPage = () => {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // Function to refresh tickets data after cancellation
   const fetchTickets = async () => {
@@ -48,6 +48,7 @@ const TicketsPage = () => {
         throw error;
       }
       
+      // Clear existing tickets and set the new ones
       const transformedTickets = (data || []).map((ticket: any) => ({
         id: ticket.id,
         game_title: ticket.game_title,
@@ -60,6 +61,7 @@ const TicketsPage = () => {
       }));
       
       setTickets(transformedTickets);
+      console.log("Tickets fetched:", transformedTickets.length);
     } catch (error: any) {
       console.error('Erro ao atualizar bilhetes:', error);
       toast.error('Erro ao carregar bilhetes', {
@@ -70,9 +72,16 @@ const TicketsPage = () => {
     }
   };
   
+  // Function to trigger a refresh when a ticket is cancelled
+  const handleTicketCancellation = () => {
+    // Set a refresh trigger to force a re-fetch
+    setRefreshTrigger(prev => prev + 1);
+  };
+  
+  // Fetch tickets when the component mounts or when the refreshTrigger changes
   useEffect(() => {
     fetchTickets();
-  }, [user]);
+  }, [user, refreshTrigger]);
   
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -178,7 +187,7 @@ const TicketsPage = () => {
                       price: seat.price
                     }}
                     onDownload={() => handleDownloadTicket(ticket, seat)}
-                    onCancel={() => fetchTickets()}
+                    onCancel={handleTicketCancellation}
                   />
                 ))}
               </div>
