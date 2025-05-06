@@ -107,8 +107,15 @@ const CancelPurchaseButton = ({ purchaseId, onCancel }: CancelPurchaseButtonProp
       });
       
       // Call the onCancel callback to refresh the tickets list in the parent component
-      onCancel();
+      // Close the dialog first, then trigger refresh with a short delay to ensure
+      // the deletion has completed in the database
       setIsOpen(false);
+      
+      // Wait a moment before triggering the refresh to ensure deletion has completed
+      setTimeout(() => {
+        onCancel();
+      }, 300);
+      
     } catch (error) {
       console.error("Erro ao cancelar a compra:", error);
       toast({
