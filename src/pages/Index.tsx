@@ -46,14 +46,15 @@ const Index = () => {
               />
             </div>
             <div>
-              <h3 className="text-xl font-semibold mb-4">Bem-vindo ao nosso estádio!</h3>
+              <h3 className="text-xl font-semibold mb-4">O palco do futebol na Lunda Norte</h3>
               <p className="text-gray-700 mb-4">
-                O Estádio Sagrada Esperança é um dos mais importantes de Angola, onde os torcedores vivem momentos inesquecíveis 
-                e acompanham os melhores jogos do futebol angolano e internacional.
+                Localizado no coração do Dundo, o Estádio Sagrada Esperança é a casa oficial do Grupo Desportivo Sagrada Esperança e um dos mais importantes centros desportivos do leste de Angola.
               </p>
               <p className="text-gray-700 mb-4">
-                Com capacidade para milhares de torcedores, o estádio oferece uma experiência única em um ambiente 
-                seguro e confortável para toda a família.
+                Com capacidade para 8.000 a 10.000 espectadores, o estádio oferece uma infraestrutura moderna: relvado natural, camarotes, área VIP, balneários equipados e espaço para imprensa.
+              </p>
+              <p className="text-gray-700 mb-4">
+                Apoiado pela Endiama E.P., o estádio recebe jogos do Girabola, Taça de Angola e competições internacionais, sendo um símbolo de orgulho e desenvolvimento para a província da Lunda Norte.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mt-6">
                 <Link to="/games" className="btn-primary inline-block text-center">
