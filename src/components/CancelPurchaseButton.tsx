@@ -53,9 +53,8 @@ const CancelPurchaseButton = ({ purchaseId, onCancel }: CancelPurchaseButtonProp
       // 2. Para cada assento no bilhete, atualizar o status para 'available'
       if (ticketData.seats && Array.isArray(ticketData.seats)) {
         for (const seatItem of ticketData.seats) {
-          // Type guard to check if the seat has an id property and is an object
-          if (seatItem && typeof seatItem === 'object' && 'id' in seatItem) {
-            // Use a safer type assertion with proper property checking
+          // Type guard to check if the seat is an object
+          if (seatItem && typeof seatItem === 'object') {
             const seatObj = seatItem as Record<string, any>;
             
             // Verify that the seat object has all required properties
@@ -107,6 +106,7 @@ const CancelPurchaseButton = ({ purchaseId, onCancel }: CancelPurchaseButtonProp
         description: "A sua compra foi cancelada com sucesso e os assentos estão disponíveis novamente.",
       });
       
+      // Call the onCancel callback to refresh the tickets list in the parent component
       onCancel();
       setIsOpen(false);
     } catch (error) {

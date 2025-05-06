@@ -32,44 +32,45 @@ const TicketsPage = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   
-  useEffect(() => {
-    const fetchTickets = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('tickets')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          throw error;
-        }
-        
-        // Transform the data to match the Ticket interface
-        const transformedTickets: Ticket[] = (data || []).map((ticket: any) => ({
-          id: ticket.id,
-          game_title: ticket.game_title,
-          date: ticket.date,
-          time: ticket.time,
-          stadium: ticket.stadium,
-          seats: Array.isArray(ticket.seats) ? ticket.seats : [],
-          created_at: ticket.created_at,
-          game_id: ticket.game_id
-        }));
-        
-        setTickets(transformedTickets);
-      } catch (error: any) {
-        console.error('Erro ao carregar bilhetes:', error);
-        toast.error('Erro ao carregar bilhetes', {
-          description: error.message
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Function to refresh tickets data after cancellation
+  const fetchTickets = async () => {
+    if (!user) return;
     
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      const transformedTickets = (data || []).map((ticket: any) => ({
+        id: ticket.id,
+        game_title: ticket.game_title,
+        date: ticket.date,
+        time: ticket.time,
+        stadium: ticket.stadium,
+        seats: Array.isArray(ticket.seats) ? ticket.seats : [],
+        created_at: ticket.created_at,
+        game_id: ticket.game_id
+      }));
+      
+      setTickets(transformedTickets);
+    } catch (error: any) {
+      console.error('Erro ao atualizar bilhetes:', error);
+      toast.error('Erro ao carregar bilhetes', {
+        description: error.message
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchTickets();
   }, [user]);
   
@@ -135,48 +136,6 @@ const TicketsPage = () => {
       toast.error('Erro ao gerar bilhete', {
         description: error.message || 'Tente novamente mais tarde'
       });
-    }
-  };
-
-  const handleCancelPurchase = async (ticketId: string) => {
-    // This function will be used by the TicketCard component
-    // Implementation is handled by CancelPurchaseButton
-    // We just need to refresh the tickets list after cancellation
-    fetchTickets();
-  };
-  
-  // Function to refresh tickets data after cancellation
-  const fetchTickets = async () => {
-    if (!user) return;
-    
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('tickets')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        throw error;
-      }
-      
-      const transformedTickets = (data || []).map((ticket: any) => ({
-        id: ticket.id,
-        game_title: ticket.game_title,
-        date: ticket.date,
-        time: ticket.time,
-        stadium: ticket.stadium,
-        seats: Array.isArray(ticket.seats) ? ticket.seats : [],
-        created_at: ticket.created_at,
-        game_id: ticket.game_id
-      }));
-      
-      setTickets(transformedTickets);
-    } catch (error: any) {
-      console.error('Erro ao atualizar bilhetes:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
