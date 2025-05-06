@@ -55,18 +55,37 @@ const CancelPurchaseButton = ({ purchaseId, onCancel }: CancelPurchaseButtonProp
         for (const seatItem of ticketData.seats) {
           // Type guard to check if the seat has an id property and is an object
           if (seatItem && typeof seatItem === 'object' && 'id' in seatItem) {
-            const seat = seatItem as Seat;
-            const { error: seatError } = await supabase
-              .from('seats')
-              .update({
-                status: 'available',
-                reserved_by: null,
-                reserved_until: null
-              })
-              .eq('id', seat.id);
+            // Use a safer type assertion with proper property checking
+            const seatObj = seatItem as Record<string, any>;
             
-            if (seatError) {
-              console.error(`Erro ao liberar assento ${seat.id}:`, seatError);
+            // Verify that the seat object has all required properties
+            if (
+              typeof seatObj.id === 'string' &&
+              typeof seatObj.row === 'string' &&
+              typeof seatObj.number === 'number' &&
+              typeof seatObj.section === 'string'
+            ) {
+              // Now we can safely treat it as a Seat
+              const seat: Seat = {
+                id: seatObj.id,
+                row: seatObj.row,
+                number: seatObj.number,
+                section: seatObj.section,
+                price: seatObj.price
+              };
+              
+              const { error: seatError } = await supabase
+                .from('seats')
+                .update({
+                  status: 'available',
+                  reserved_by: null,
+                  reserved_until: null
+                })
+                .eq('id', seat.id);
+              
+              if (seatError) {
+                console.error(`Erro ao liberar assento ${seat.id}:`, seatError);
+              }
             }
           }
         }
