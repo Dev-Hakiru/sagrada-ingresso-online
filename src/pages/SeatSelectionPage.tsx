@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -108,10 +107,8 @@ const SeatSelectionPage = () => {
       }
     } catch (error) {
       console.error('Erro ao inicializar assentos:', error);
-      toast({
-        title: "Erro",
+      toast("Erro", {
         description: "Não foi possível inicializar os assentos. Tente novamente mais tarde.",
-        variant: "destructive"
       });
     }
   };
