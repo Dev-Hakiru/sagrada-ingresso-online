@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 type Seat = {
   id: string;
@@ -28,8 +28,28 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+// Try to load cart from localStorage
+const loadCartFromStorage = (): CartItem[] => {
+  try {
+    const savedCart = localStorage.getItem('cart');
+    return savedCart ? JSON.parse(savedCart) : [];
+  } catch (error) {
+    console.error('Failed to load cart from localStorage:', error);
+    return [];
+  }
+};
+
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(loadCartFromStorage);
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('cart', JSON.stringify(items));
+    } catch (error) {
+      console.error('Failed to save cart to localStorage:', error);
+    }
+  }, [items]);
 
   const addToCart = (item: CartItem) => {
     // Check if game already in cart
@@ -40,18 +60,22 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const updatedItems = [...items];
       updatedItems[existingIndex] = item;
       setItems(updatedItems);
+      console.log('Updated existing item in cart:', item);
     } else {
       // Add new game
-      setItems([...items, item]);
+      setItems(prev => [...prev, item]);
+      console.log('Added new item to cart:', item);
     }
   };
 
   const removeFromCart = (gameId: number) => {
-    setItems(items.filter(item => item.gameId !== gameId));
+    setItems(prev => prev.filter(item => item.gameId !== gameId));
+    console.log('Removed item from cart:', gameId);
   };
 
   const clearCart = () => {
     setItems([]);
+    console.log('Cart cleared');
   };
 
   const totalPrice = items.reduce((sum, item) => 

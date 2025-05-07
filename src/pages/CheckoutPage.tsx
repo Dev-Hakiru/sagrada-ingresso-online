@@ -17,6 +17,13 @@ const CheckoutPage = () => {
   const navigate = useNavigate();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    multicaixaPhone: ''
+  });
   
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(price);
@@ -27,6 +34,14 @@ const CheckoutPage = () => {
     navigate('/cart');
     return null;
   }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,10 +51,17 @@ const CheckoutPage = () => {
       navigate('/login');
       return;
     }
+
+    if (items.length === 0) {
+      toast.error("Seu carrinho está vazio");
+      navigate('/cart');
+      return;
+    }
     
     setIsSubmitting(true);
     
     try {
+      console.log("Processing checkout with items:", items);
       // Para cada jogo no carrinho, vamos criar um bilhete
       for (const item of items) {
         const ticketData = {
@@ -53,14 +75,17 @@ const CheckoutPage = () => {
         };
         
         // 1. Inserir o bilhete na tabela tickets
-        const { error } = await supabase
+        const { data: ticketResult, error } = await supabase
           .from('tickets')
-          .insert(ticketData);
+          .insert(ticketData)
+          .select();
         
         if (error) {
           console.error("Erro ao salvar bilhete:", error);
           throw new Error(`Erro ao salvar bilhete: ${error.message}`);
         }
+        
+        console.log("Ticket created successfully:", ticketResult);
         
         // 2. Atualizar o status dos assentos para 'sold'
         for (const seat of item.seats) {
@@ -74,12 +99,14 @@ const CheckoutPage = () => {
               
           if (seatError) {
             console.error(`Erro ao atualizar assento ${seat.id}:`, seatError);
+          } else {
+            console.log(`Seat ${seat.id} marked as sold`);
           }
         }
       }
       
       toast.success("Pagamento processado com sucesso! Seus bilhetes estão prontos.");
-      clearCart();
+      clearCart(); // Clear the cart after successful purchase
       navigate('/tickets');
     } catch (error: any) {
       toast.error("Erro ao processar pagamento", {
@@ -103,19 +130,45 @@ const CheckoutPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">Nome</Label>
-                    <Input id="firstName" placeholder="Seu nome" required />
+                    <Input 
+                      id="firstName" 
+                      placeholder="Seu nome" 
+                      required 
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Sobrenome</Label>
-                    <Input id="lastName" placeholder="Seu sobrenome" required />
+                    <Input 
+                      id="lastName" 
+                      placeholder="Seu sobrenome" 
+                      required 
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="seu-email@exemplo.com" required />
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="seu-email@exemplo.com" 
+                      required 
+                      value={formData.email}
+                      onChange={handleInputChange}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Telefone</Label>
-                    <Input id="phone" type="tel" placeholder="+244 999 888 777" required />
+                    <Input 
+                      id="phone" 
+                      type="tel" 
+                      placeholder="+244 999 888 777" 
+                      required 
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                    />
                   </div>
                 </div>
               </div>
@@ -143,8 +196,15 @@ const CheckoutPage = () => {
                     o pagamento através do Multicaixa Express.
                   </p>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Número do Telefone para Multicaixa</Label>
-                    <Input id="multicaixa-phone" type="tel" placeholder="+244 999 888 777" required />
+                    <Label htmlFor="multicaixaPhone">Número do Telefone para Multicaixa</Label>
+                    <Input 
+                      id="multicaixaPhone" 
+                      type="tel" 
+                      placeholder="+244 999 888 777" 
+                      required 
+                      value={formData.multicaixaPhone}
+                      onChange={handleInputChange}
+                    />
                   </div>
                 </div>
               </div>

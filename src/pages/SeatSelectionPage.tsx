@@ -8,13 +8,14 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { Calendar } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 const SeatSelectionPage = () => {
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   
   const [selectedSeats, setSelectedSeats] = useState<SeatType[]>([]);
   const [game, setGame] = useState(getGameById(Number(gameId)));
@@ -57,7 +58,7 @@ const SeatSelectionPage = () => {
       }
     } catch (error) {
       console.error('Erro ao buscar assentos:', error);
-      toast({
+      uiToast({
         title: "Erro",
         description: "Não foi possível carregar os assentos. Tente novamente mais tarde.",
         variant: "destructive"
@@ -133,14 +134,19 @@ const SeatSelectionPage = () => {
   
   const handleSeatSelect = (seat: SeatType) => {
     if (seat.status === 'selected') {
-      setSelectedSeats([...selectedSeats, seat]);
+      setSelectedSeats(prev => [...prev, seat]);
     } else {
-      setSelectedSeats(selectedSeats.filter(s => s.id !== seat.id));
+      setSelectedSeats(prev => prev.filter(s => s.id !== seat.id));
     }
   };
   
   const handleAddToCart = async () => {
-    if (selectedSeats.length > 0) {
+    if (selectedSeats.length === 0) {
+      toast.error("Por favor, selecione pelo menos um assento.");
+      return;
+    }
+    
+    try {
       addToCart({
         gameId: game.id,
         gameTitle: `${game.homeTeam} vs ${game.awayTeam}`,
@@ -149,7 +155,11 @@ const SeatSelectionPage = () => {
         seats: selectedSeats
       });
       
+      toast.success("Assentos adicionados ao carrinho com sucesso!");
       navigate('/cart');
+    } catch (error) {
+      console.error('Erro ao adicionar ao carrinho:', error);
+      toast.error("Erro ao adicionar assentos ao carrinho. Tente novamente.");
     }
   };
 
