@@ -59,7 +59,6 @@ const SeatSelectionPage = () => {
     } catch (error) {
       console.error('Erro ao buscar assentos:', error);
       uiToast({
-        title: "Erro",
         description: "Não foi possível carregar os assentos. Tente novamente mais tarde.",
         variant: "destructive"
       });
