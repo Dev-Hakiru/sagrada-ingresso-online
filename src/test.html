@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Teste Supabase</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+  <h1>Teste de Conexão com Supabase</h1>
+  <button onclick="testarSupabase()">Testar Supabase</button>
+
+  <script>
+    const supabaseUrl = 'https://xobtwxhoolqbuqubxbo.supabase.co'
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvYnR3eGh3b29scWJ1cXVieGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxOTk0NDIsImV4cCI6MjA2MTc3NTQ0Mn0.6BvgiXn-Ezf64OOtsYHIkd50TXv1b9uF51k50c-yXJ8'
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey)
+
+    async function testarSupabase() {
+      const { data, error } = await supabase
+        .from('usuarios') // troque pelo nome da sua tabela, se for diferente
+        .select('*')
+
+      if (error) {
+        console.error('Erro Supabase:', error)
+        alert('Erro na conexão. Veja o console.')
+      } else {
+        console.log('Dados da Supabase:', data)
+        alert('Supabase está funcionando! Veja no console.')
+      }
+    }
+  </script>
+</body>
+</html>
