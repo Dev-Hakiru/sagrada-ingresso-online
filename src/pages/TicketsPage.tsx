@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -30,9 +31,8 @@ const TicketsPage = () => {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
-  // Function to refresh tickets data after cancellation
+  // Function to fetch tickets data
   const fetchTickets = async () => {
     if (!user) return;
     
@@ -72,16 +72,10 @@ const TicketsPage = () => {
     }
   };
   
-  // Function to trigger a refresh when a ticket is cancelled
-  const handleTicketCancellation = () => {
-    // Set a refresh trigger to force a re-fetch
-    setRefreshTrigger(prev => prev + 1);
-  };
-  
-  // Fetch tickets when the component mounts or when the refreshTrigger changes
+  // Fetch tickets when the component mounts
   useEffect(() => {
     fetchTickets();
-  }, [user, refreshTrigger]);
+  }, [user]);
   
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -187,7 +181,6 @@ const TicketsPage = () => {
                       price: seat.price
                     }}
                     onDownload={() => handleDownloadTicket(ticket, seat)}
-                    onCancel={handleTicketCancellation}
                   />
                 ))}
               </div>

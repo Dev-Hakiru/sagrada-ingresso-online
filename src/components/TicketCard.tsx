@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import CancelPurchaseButton from './CancelPurchaseButton';
 
 type Ticket = {
   id: string;
@@ -23,10 +22,9 @@ type Ticket = {
 type TicketCardProps = {
   ticket: Ticket;
   onDownload: () => void;
-  onCancel: () => void;
 };
 
-const TicketCard = ({ ticket, onDownload, onCancel }: TicketCardProps) => {
+const TicketCard = ({ ticket, onDownload }: TicketCardProps) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('pt-AO', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
@@ -76,12 +74,7 @@ const TicketCard = ({ ticket, onDownload, onCancel }: TicketCardProps) => {
         </div>
       </CardContent>
       
-      <CardFooter className="flex justify-between p-6 pt-0 border-t">
-        <CancelPurchaseButton 
-          purchaseId={ticket.purchaseId}
-          onCancel={onCancel}
-        />
-        
+      <CardFooter className="flex justify-end p-6 pt-0 border-t">
         <Button variant="outline" className="gap-2" onClick={onDownload}>
           <Download size={16} />
           <span>Download PDF</span>

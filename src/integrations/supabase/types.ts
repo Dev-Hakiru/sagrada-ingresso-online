@@ -142,6 +142,7 @@ export type Database = {
     Functions: {
       initialize_seats_for_game: {
         Args:
+          | Record<PropertyKey, never>
           | {
               game_id_param: string
               sections: string[]
