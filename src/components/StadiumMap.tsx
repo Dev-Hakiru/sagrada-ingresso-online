@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -51,7 +50,7 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
       const { data, error } = await supabase
         .from('seats')
         .select('*')
-        .eq('game_id', gameId);
+        .eq('game_id', gameId.toString()); // Convert number to string here
         
       if (error) throw error;
       
@@ -113,7 +112,7 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
           event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
           schema: 'public', 
           table: 'seats',
-          filter: `game_id=eq.${gameId}` 
+          filter: `game_id=eq.${gameId.toString()}` // Convert number to string here 
         }, 
         (payload) => {
           // Atualizar nosso estado local quando recebemos atualizações em tempo real
@@ -218,7 +217,7 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
       
       // Chamar a função RPC para inicializar os assentos
       const { error } = await supabase.rpc('initialize_seats_for_game', {
-        game_id_param: gameId.toString(),
+        game_id_param: gameId.toString(), // Convert number to string here
         vip_rows: vipRows,
         normal_left_rows: normalLeftRows,
         normal_right_rows: normalRightRows,
@@ -232,7 +231,7 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
       const { data, error: fetchError } = await supabase
         .from('seats')
         .select('*')
-        .eq('game_id', gameId.toString());
+        .eq('game_id', gameId.toString()); // Convert number to string here
       
       if (fetchError) throw fetchError;
       
