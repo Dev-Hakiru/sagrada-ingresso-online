@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import StadiumMap, { SeatType } from '@/components/StadiumMap';
@@ -25,12 +26,10 @@ const SeatSelectionPage = () => {
     if (!game) {
       // Game not found, redirect to games list
       navigate('/games');
-    } else {
-      fetchSeats();
     }
   }, [game, navigate]);
   
-  const fetchSeats = async () => {
+  const fetchSeats = useCallback(async () => {
     if (!gameId) return;
     
     setLoading(true);
@@ -64,7 +63,41 @@ const SeatSelectionPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [gameId, uiToast]);
+  
+  // Atualizar assentos em tempo real
+  useEffect(() => {
+    // Buscar assentos inicialmente
+    fetchSeats();
+    
+    // Configurar atualização periódica
+    const intervalId = setInterval(() => {
+      fetchSeats();
+    }, 5000); // Atualiza a cada 5 segundos
+    
+    // Configurar listener para mudanças em tempo real
+    const channel = supabase
+      .channel('seat-selection-updates')
+      .on('postgres_changes', 
+        { 
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public', 
+          table: 'seats',
+          filter: `game_id=eq.${gameId}` 
+        }, 
+        () => {
+          // Quando ocorrer qualquer mudança, recarregar os assentos
+          fetchSeats();
+        }
+      )
+      .subscribe();
+    
+    // Cleanup
+    return () => {
+      clearInterval(intervalId);
+      supabase.channel('seat-selection-updates').unsubscribe();
+    };
+  }, [fetchSeats, gameId]);
   
   const initializeSeats = async () => {
     try {
@@ -158,10 +191,6 @@ const SeatSelectionPage = () => {
       toast.error("Erro ao adicionar assentos ao carrinho. Tente novamente.");
     }
   };
-
-  if (!game) {
-    return null;
-  }
 
   return (
     <Layout>

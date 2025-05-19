@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +16,7 @@ import { Loader2 } from 'lucide-react';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetPassOpen, setResetPassOpen] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
@@ -26,7 +26,8 @@ const LoginPage = () => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        navigate('/tickets');
+        // Redirect to home page instead of tickets
+        navigate('/');
       }
     };
     
@@ -36,7 +37,8 @@ const LoginPage = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN') {
-          navigate('/tickets');
+          // Redirect to home page instead of tickets
+          navigate('/');
         }
       }
     );
@@ -63,6 +65,8 @@ const LoginPage = () => {
       if (error) throw error;
       
       toast.success("Login realizado com sucesso!");
+      // Navigate to home after successful login
+      navigate('/');
     } catch (error: any) {
       toast.error("Erro ao fazer login", {
         description: error.message || "Verifique suas credenciais e tente novamente.",

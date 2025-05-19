@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 export type SeatType = {
   id: string;
@@ -36,37 +37,105 @@ const SEAT_PRICES = {
 
 const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: StadiumMapProps) => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const [seats, setSeats] = useState<Record<string, Record<string, SeatType[]>>>({});
   const [loading, setLoading] = useState(false);
   const [realtimeSeats, setRealtimeSeats] = useState<Record<string, any>>({});
   
+  // Função para buscar os dados dos assentos
+  const fetchSeats = useCallback(async () => {
+    if (!gameId) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('seats')
+        .select('*')
+        .eq('game_id', gameId);
+        
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        // Garantir que todos os assentos estão disponíveis a menos que estejam vendidos
+        const updatedData = data.map(seat => ({
+          ...seat,
+          status: seat.status === 'sold' ? 'sold' : 'available',
+          reserved_by: seat.status === 'sold' ? seat.reserved_by : null,
+          reserved_until: seat.status === 'sold' ? seat.reserved_until : null,
+        }));
+        
+        // Atualizar os dados dos assentos
+        organizeSeats(updatedData);
+      } else {
+        // Se não houver dados, inicializar os assentos no banco de dados
+        await initializeSeats();
+      }
+    } catch (error) {
+      console.error('Erro ao buscar assentos:', error);
+      uiToast({
+        description: "Não foi possível carregar os assentos. Tente novamente mais tarde.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [gameId, uiToast]);
+  
+  // Atualizar assentos em tempo real
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchSeats();
+    }, 5000); // Atualiza a cada 5 segundos
+    
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [fetchSeats]);
+  
+  // Configurar inscrição em tempo real para os assentos
   useEffect(() => {
     setupRealtimeSubscription();
-    organizeSeats();
     
-    // Cleanup subscription on unmount
+    // Buscar os assentos no carregamento inicial
+    fetchSeats();
+    
+    // Limpar inscrição ao desmontar
     return () => {
       cleanupRealtimeSubscription();
     };
-  }, [seatData]);
+  }, [fetchSeats]);
   
   const setupRealtimeSubscription = () => {
     const channel = supabase
       .channel('seat-updates')
       .on('postgres_changes', 
         { 
-          event: 'UPDATE', 
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
           schema: 'public', 
           table: 'seats',
           filter: `game_id=eq.${gameId}` 
         }, 
         (payload) => {
-          // Update our local state when we get realtime updates
-          setRealtimeSeats(prevSeats => ({
-            ...prevSeats,
-            [payload.new.id]: payload.new
-          }));
+          // Atualizar nosso estado local quando recebemos atualizações em tempo real
+          if (payload.eventType === 'DELETE') {
+            // Se um assento foi excluído, removê-lo do estado
+            setRealtimeSeats(prevSeats => {
+              const newSeats = { ...prevSeats };
+              delete newSeats[payload.old.id];
+              return newSeats;
+            });
+            
+            // Refetch para garantir que tenhamos os dados mais recentes
+            fetchSeats();
+            
+            toast.info("Um assento foi removido e está agora disponível");
+          } else {
+            // Para INSERT e UPDATE, atualizar o assento no estado
+            setRealtimeSeats(prevSeats => ({
+              ...prevSeats,
+              [payload.new.id]: payload.new
+            }));
+          }
         }
       )
       .subscribe();
@@ -78,37 +147,37 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
     supabase.channel('seat-updates').unsubscribe();
   };
   
-  const organizeSeats = () => {
-    if (!seatData || seatData.length === 0) return;
+  const organizeSeats = (seatsData: any[]) => {
+    if (!seatsData || seatsData.length === 0) return;
     
     const organizedSeats: Record<string, Record<string, SeatType[]>> = {};
     
-    seatData.forEach(dbSeat => {
+    seatsData.forEach(dbSeat => {
       if (!dbSeat) return;
       
       const section = dbSeat.section || '';
       const row = dbSeat.row || '';
       
-      // Initialize section if doesn't exist
+      // Inicializar seção se não existir
       if (!organizedSeats[section]) {
         organizedSeats[section] = {};
       }
       
-      // Initialize row if doesn't exist
+      // Inicializar linha se não existir
       if (!organizedSeats[section][row]) {
         organizedSeats[section][row] = [];
       }
       
-      // Check if this seat is being tracked in realtime updates
+      // Verificar se este assento está sendo rastreado em atualizações em tempo real
       const realtimeSeat = realtimeSeats[dbSeat.id];
       const currentStatus = realtimeSeat ? realtimeSeat.status : dbSeat.status;
       
-      // Check if this seat is selected
+      // Verificar se este assento está selecionado
       const isSelected = selectedSeats.some(selectedSeat => 
         selectedSeat.id === dbSeat.id
       );
       
-      // Create the seat object
+      // Criar o objeto de assento
       const seat: SeatType = {
         id: dbSeat.id,
         section: dbSeat.section,
@@ -121,7 +190,7 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
       organizedSeats[section][row].push(seat);
     });
     
-    // Sort rows and seats by number
+    // Ordenar linhas e assentos por número
     Object.keys(organizedSeats).forEach(section => {
       Object.keys(organizedSeats[section]).forEach(row => {
         organizedSeats[section][row].sort((a, b) => a.number - b.number);
@@ -132,14 +201,62 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
   };
   
   useEffect(() => {
-    // Update seats organization when selectedSeats change
-    organizeSeats();
+    // Atualizar organização dos assentos quando selectedSeats mudar
+    if (seatData && seatData.length > 0) {
+      organizeSeats(seatData);
+    }
   }, [selectedSeats, realtimeSeats, seatData]);
+  
+  const initializeSeats = async () => {
+    try {
+      // Definir os parâmetros para as áreas VIP e normais
+      const vipRows = ['1', '2', '3'];  // 3 fileiras VIP com 28 assentos cada = 84 assentos VIP
+      const normalLeftRows = ['1', '2', '3', '4', '5'];  // 5 fileiras na área normal esquerda
+      const normalRightRows = ['1', '2', '3', '4', '5'];  // 5 fileiras na área normal direita
+      const vipSeatsPerRow = 28;  // 28 assentos por fileira VIP
+      const normalSeatsPerRow = 20;  // 20 assentos por fileira normal (20 x 5 x 2 = 200 assentos normais)
+      
+      // Chamar a função RPC para inicializar os assentos
+      const { error } = await supabase.rpc('initialize_seats_for_game', {
+        game_id_param: gameId.toString(),
+        vip_rows: vipRows,
+        normal_left_rows: normalLeftRows,
+        normal_right_rows: normalRightRows,
+        vip_seats_per_row: vipSeatsPerRow,
+        normal_seats_per_row: normalSeatsPerRow
+      });
+      
+      if (error) throw error;
+      
+      // Buscar os assentos novamente após inicialização
+      const { data, error: fetchError } = await supabase
+        .from('seats')
+        .select('*')
+        .eq('game_id', gameId.toString());
+      
+      if (fetchError) throw fetchError;
+      
+      if (data) {
+        // Garantir que todos os assentos estão disponíveis
+        const initialSeats = data.map(seat => ({
+          ...seat,
+          status: 'available',
+          reserved_by: null,
+          reserved_until: null,
+        }));
+        organizeSeats(initialSeats);
+      }
+    } catch (error) {
+      console.error('Erro ao inicializar assentos:', error);
+      toast("Erro", {
+        description: "Não foi possível inicializar os assentos. Tente novamente mais tarde.",
+      });
+    }
+  };
   
   const handleSeatClick = async (seat: SeatType) => {
     if (!user) {
-      toast({
-        title: "Erro",
+      uiToast({
         description: "Você precisa estar logado para selecionar assentos",
         variant: "destructive"
       });
@@ -147,8 +264,7 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
     }
     
     if (seat.status === 'sold') {
-      toast({
-        title: "Assento indisponível",
+      uiToast({
         description: "Este assento já foi vendido",
         variant: "destructive"
       });
@@ -158,9 +274,9 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
     setLoading(true);
     
     try {
-      // If the seat is already selected, we want to deselect it
+      // Se o assento já está selecionado, queremos desmarcar
       if (seat.status === 'selected') {
-        // Update the seat status to available in the database
+        // Atualizar o status do assento para disponível no banco de dados
         const { error } = await supabase
           .from('seats')
           .update({ 
@@ -172,16 +288,16 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
           
         if (error) throw error;
         
-        // Update the UI - this will remove the seat from selection
+        // Atualizar a UI - isso removerá o assento da seleção
         seat.status = 'available';
       } 
-      // If the seat is available, we want to select it
+      // Se o assento está disponível, queremos selecioná-lo
       else if (seat.status === 'available') {
-        // Calculate reservation time (15 minutes from now)
+        // Calcular tempo de reserva (15 minutos a partir de agora)
         const reservationTime = new Date();
         reservationTime.setMinutes(reservationTime.getMinutes() + 15);
         
-        // Update the seat status to selected in the database
+        // Atualizar o status do assento para selecionado no banco de dados
         const { error } = await supabase
           .from('seats')
           .update({ 
@@ -193,16 +309,15 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
           
         if (error) throw error;
         
-        // Update the UI - this will add the seat to selection
+        // Atualizar a UI - isso adicionará o assento à seleção
         seat.status = 'selected';
       }
       
-      // Call the parent component's function to update selected seats
+      // Chamar a função do componente pai para atualizar assentos selecionados
       onSeatSelect(seat);
     } catch (error: any) {
       console.error('Error updating seat status:', error);
-      toast({
-        title: "Erro",
+      uiToast({
         description: error.message || "Ocorreu um erro ao selecionar o assento",
         variant: "destructive"
       });
