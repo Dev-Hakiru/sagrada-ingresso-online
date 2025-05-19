@@ -10,29 +10,46 @@ import { Calendar } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 
 const SeatSelectionPage = () => {
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { toast: uiToast } = useToast();
+  const { user } = useAuth();
   
   const [selectedSeats, setSelectedSeats] = useState<SeatType[]>([]);
   const [game, setGame] = useState(getGameById(Number(gameId)));
   const [seatData, setSeatData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
   
   useEffect(() => {
+    // Verificar autenticação
+    if (!user) {
+      navigate('/login', { 
+        state: { 
+          from: `/games/${gameId}/seats`,
+          message: "Você precisa estar logado para selecionar assentos."
+        } 
+      });
+      return;
+    }
+    
     if (!game) {
       // Game not found, redirect to games list
       navigate('/games');
     }
-  }, [game, navigate]);
+  }, [game, navigate, user, gameId]);
   
   const fetchSeats = useCallback(async () => {
     if (!gameId) return;
     
-    setLoading(true);
+    setRefreshing(true);
     try {
       const { data, error } = await supabase
         .from('seats')
@@ -42,7 +59,7 @@ const SeatSelectionPage = () => {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        // Make sure all seats are available unless they've been purchased
+        // Garantir que apenas assentos marcados como vendidos na base estão indisponíveis
         const updatedData = data.map(seat => ({
           ...seat,
           status: seat.status === 'sold' ? 'sold' : 'available',
@@ -51,9 +68,12 @@ const SeatSelectionPage = () => {
         }));
         setSeatData(updatedData);
       } else {
-        // Se não houver dados, inicializar os assentos no banco de dados usando a nova função
+        // Se não houver dados, inicializar os assentos no banco de dados
         await initializeSeats();
       }
+      
+      // Atualizar timestamp da última atualização
+      setLastRefreshTime(new Date());
     } catch (error) {
       console.error('Erro ao buscar assentos:', error);
       uiToast({
@@ -61,19 +81,20 @@ const SeatSelectionPage = () => {
         variant: "destructive"
       });
     } finally {
+      setRefreshing(false);
       setLoading(false);
     }
   }, [gameId, uiToast]);
   
-  // Atualizar assentos em tempo real
+  // Atualizar assentos em tempo real - agora a cada 30 segundos
   useEffect(() => {
     // Buscar assentos inicialmente
     fetchSeats();
     
-    // Configurar atualização periódica
+    // Configurar atualização periódica a cada 30 segundos
     const intervalId = setInterval(() => {
       fetchSeats();
-    }, 5000); // Atualiza a cada 5 segundos
+    }, 30000); // Atualiza a cada 30 segundos
     
     // Configurar listener para mudanças em tempo real
     const channel = supabase
@@ -129,7 +150,7 @@ const SeatSelectionPage = () => {
       if (fetchError) throw fetchError;
       
       if (data) {
-        // Make sure all seats are available 
+        // Garantir que todos os assentos estão disponíveis 
         const initialSeats = data.map(seat => ({
           ...seat,
           status: 'available',
@@ -144,6 +165,10 @@ const SeatSelectionPage = () => {
         description: "Não foi possível inicializar os assentos. Tente novamente mais tarde.",
       });
     }
+  };
+  
+  const handleManualRefresh = () => {
+    fetchSeats();
   };
   
   if (!game) {
@@ -192,6 +217,20 @@ const SeatSelectionPage = () => {
     }
   };
 
+  // Calcular tempo desde a última atualização
+  const getTimeSinceLastRefresh = () => {
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - lastRefreshTime.getTime()) / 1000);
+    return seconds;
+  };
+
+  // Calcular porcentagem para a barra de progresso da próxima atualização
+  const getRefreshProgress = () => {
+    const secondsSinceRefresh = getTimeSinceLastRefresh();
+    const progressPercentage = Math.min(100, (secondsSinceRefresh / 30) * 100);
+    return progressPercentage;
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -201,6 +240,26 @@ const SeatSelectionPage = () => {
             <Calendar size={18} className="mr-2" />
             <span>{formatDate(game.date)} às {game.time}</span>
           </div>
+          
+          {/* Barra de atualização */}
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-sm text-gray-500">
+                {refreshing 
+                  ? "Atualizando assentos..." 
+                  : `Última atualização: ${lastRefreshTime.toLocaleTimeString()}`}
+              </span>
+              <button 
+                onClick={handleManualRefresh}
+                className="text-sm text-blue-600 hover:text-blue-800"
+                disabled={refreshing}
+              >
+                Atualizar agora
+              </button>
+            </div>
+            <Progress value={getRefreshProgress()} className="h-1" />
+            <p className="text-xs text-gray-500 mt-1">Próxima atualização em {30 - getTimeSinceLastRefresh()} segundos</p>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -208,8 +267,26 @@ const SeatSelectionPage = () => {
             <div className="bg-white rounded-lg shadow-md p-4 mb-6">
               <h2 className="text-xl font-semibold mb-4">Selecione seus assentos</h2>
               {loading ? (
-                <div className="flex justify-center items-center h-64">
-                  <p>Carregando assentos...</p>
+                <div className="flex flex-col space-y-4">
+                  <Skeleton className="h-64 w-full" />
+                  <div className="flex justify-center">
+                    <p>Carregando assentos...</p>
+                  </div>
+                </div>
+              ) : refreshing ? (
+                <div className="relative">
+                  <StadiumMap 
+                    selectedSeats={selectedSeats} 
+                    onSeatSelect={handleSeatSelect} 
+                    gameId={game.id}
+                    seatData={seatData}
+                  />
+                  <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="font-medium text-gray-800">Atualizando assentos...</p>
+                      <p className="text-sm text-gray-500">Por favor, aguarde</p>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <StadiumMap 
