@@ -29,7 +29,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<RequireAuth><Index /></RequireAuth>} />
+              <Route path="/" element={<Index />} />
               <Route path="/games" element={<RequireAuth><GamesPage /></RequireAuth>} />
               <Route path="/games/:gameId/seats" element={<RequireAuth><SeatSelectionPage /></RequireAuth>} />
               <Route path="/cart" element={<RequireAuth><CartPage /></RequireAuth>} />

@@ -111,10 +111,12 @@ export const RequireAuth = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (!loading && !user) {
-      // Redireciona para a página inicial em vez da página de login
-      navigate("/");
+      toast.error("Acesso restrito", {
+        description: "Faça login para continuar"
+      });
+      navigate("/login", { state: { from: location } });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, location]);
 
   if (loading) {
     return (
