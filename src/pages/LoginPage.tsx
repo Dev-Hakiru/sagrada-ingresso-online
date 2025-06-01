@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -20,6 +20,7 @@ const LoginPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetPassOpen, setResetPassOpen] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [activeTab, setActiveTab] = useState('login');
   
   // Verificar se o usuário já está logado
   useEffect(() => {
@@ -158,13 +159,35 @@ const LoginPage = () => {
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-md overflow-hidden">
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid grid-cols-2">
-              <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="register">Cadastrar</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login" className="p-6">
+          {/* Header with tab buttons */}
+          <div className="border-b">
+            <div className="flex">
+              <button
+                onClick={() => setActiveTab('login')}
+                className={`flex-1 py-3 px-4 text-center font-medium ${
+                  activeTab === 'login'
+                    ? 'border-b-2 border-sagrada-green text-sagrada-green'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Entrar
+              </button>
+              <button
+                onClick={() => setActiveTab('register')}
+                className={`flex-1 py-3 px-4 text-center font-medium ${
+                  activeTab === 'register'
+                    ? 'border-b-2 border-sagrada-green text-sagrada-green'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Cadastrar
+              </button>
+            </div>
+          </div>
+          
+          {/* Login form */}
+          {activeTab === 'login' && (
+            <div className="p-6">
               <h1 className="text-2xl font-bold mb-6">Entre na sua conta</h1>
               
               <form onSubmit={handleLogin} className="space-y-4">
@@ -199,9 +222,12 @@ const LoginPage = () => {
                   )}
                 </Button>
               </form>
-            </TabsContent>
-            
-            <TabsContent value="register" className="p-6">
+            </div>
+          )}
+          
+          {/* Register form */}
+          {activeTab === 'register' && (
+            <div className="p-6">
               <h1 className="text-2xl font-bold mb-6">Criar uma conta</h1>
               
               <form onSubmit={handleRegister} className="space-y-4">
@@ -248,8 +274,8 @@ const LoginPage = () => {
                   )}
                 </Button>
               </form>
-            </TabsContent>
-          </Tabs>
+            </div>
+          )}
         </div>
       </div>
 

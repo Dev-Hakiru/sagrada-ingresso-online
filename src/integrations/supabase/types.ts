@@ -135,21 +135,6 @@ export type Database = {
         }
         Relationships: []
       }
-      "usuários test": {
-        Row: {
-          id: number
-          nome: string
-        }
-        Insert: {
-          id?: number
-          nome: string
-        }
-        Update: {
-          id?: number
-          nome?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
