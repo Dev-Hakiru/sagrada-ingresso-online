@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -19,6 +18,7 @@ type StadiumMapProps = {
   selectedSeats: SeatType[];
   onSeatSelect: (seat: SeatType) => void;
   seatData?: any[];
+  soldSeats?: Set<string>;
 };
 
 const SEAT_COLORS = {
@@ -35,7 +35,7 @@ const SEAT_PRICES = {
   C: 500   // Normal Direita
 };
 
-const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: StadiumMapProps) => {
+const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [], soldSeats = new Set() }: StadiumMapProps) => {
   const { user } = useAuth();
   const { toast: uiToast } = useToast();
   const [seats, setSeats] = useState<Record<string, Record<string, SeatType[]>>>({});
@@ -72,13 +72,26 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
         selectedSeat.id === dbSeat.id
       );
       
+      // Verificar se este assento foi vendido (baseado na tabela tickets)
+      const isSold = soldSeats.has(dbSeat.id);
+      
+      // Determinar o status final do assento
+      let finalStatus: 'available' | 'reserved' | 'sold' | 'selected';
+      if (isSold) {
+        finalStatus = 'sold';
+      } else if (isSelected) {
+        finalStatus = 'selected';
+      } else {
+        finalStatus = 'available';
+      }
+      
       // Criar o objeto de assento
       const seat: SeatType = {
         id: dbSeat.id,
         section: dbSeat.section,
         row: dbSeat.row,
         number: dbSeat.number,
-        status: isSelected ? 'selected' : (currentStatus === 'sold' ? 'sold' : 'available'),
+        status: finalStatus,
         price: SEAT_PRICES[dbSeat.section as keyof typeof SEAT_PRICES] || 5000
       };
       
@@ -93,7 +106,7 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
     });
     
     setSeats(organizedSeats);
-  }, [realtimeSeats, selectedSeats]);
+  }, [realtimeSeats, selectedSeats, soldSeats]);
   
   // Configurar inscrição em tempo real para os assentos
   useEffect(() => {
@@ -145,7 +158,7 @@ const StadiumMap = ({ gameId, selectedSeats, onSeatSelect, seatData = [] }: Stad
     if (seatData && seatData.length > 0) {
       organizeSeats(seatData);
     }
-  }, [seatData, organizeSeats, selectedSeats, realtimeSeats]);
+  }, [seatData, organizeSeats, selectedSeats, realtimeSeats, soldSeats]);
 
   const handleSeatClick = async (seat: SeatType) => {
     if (!user) {

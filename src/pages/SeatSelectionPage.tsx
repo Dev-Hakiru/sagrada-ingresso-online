@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -24,6 +23,7 @@ const SeatSelectionPage = () => {
   const [selectedSeats, setSelectedSeats] = useState<SeatType[]>([]);
   const [game, setGame] = useState(getGameById(Number(gameId)));
   const [seatData, setSeatData] = useState<any[]>([]);
+  const [soldSeats, setSoldSeats] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date>(new Date());
@@ -46,11 +46,52 @@ const SeatSelectionPage = () => {
     }
   }, [game, navigate, user, gameId]);
   
+  const fetchSoldSeats = useCallback(async () => {
+    if (!gameId) return;
+    
+    try {
+      console.log('Buscando assentos vendidos para o jogo:', gameId);
+      
+      const { data: tickets, error } = await supabase
+        .from('tickets')
+        .select('seats')
+        .eq('game_id', gameId);
+        
+      if (error) throw error;
+      
+      const soldSeatIds = new Set<string>();
+      
+      if (tickets && tickets.length > 0) {
+        tickets.forEach(ticket => {
+          if (ticket.seats && Array.isArray(ticket.seats)) {
+            ticket.seats.forEach((seat: any) => {
+              if (seat.id) {
+                soldSeatIds.add(seat.id);
+              }
+            });
+          }
+        });
+      }
+      
+      console.log('Assentos vendidos encontrados:', soldSeatIds);
+      setSoldSeats(soldSeatIds);
+    } catch (error) {
+      console.error('Erro ao buscar assentos vendidos:', error);
+      uiToast({
+        description: "Erro ao verificar assentos vendidos.",
+        variant: "destructive"
+      });
+    }
+  }, [gameId, uiToast]);
+  
   const fetchSeats = useCallback(async () => {
     if (!gameId) return;
     
     setRefreshing(true);
     try {
+      // Primeiro buscar assentos vendidos
+      await fetchSoldSeats();
+      
       const { data, error } = await supabase
         .from('seats')
         .select('*')
@@ -59,14 +100,7 @@ const SeatSelectionPage = () => {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        // Garantir que apenas assentos marcados como vendidos na base estão indisponíveis
-        const updatedData = data.map(seat => ({
-          ...seat,
-          status: seat.status === 'sold' ? 'sold' : 'available',
-          reserved_by: seat.status === 'sold' ? seat.reserved_by : null,
-          reserved_until: seat.status === 'sold' ? seat.reserved_until : null,
-        }));
-        setSeatData(updatedData);
+        setSeatData(data);
       } else {
         // Se não houver dados, inicializar os assentos no banco de dados
         await initializeSeats();
@@ -84,7 +118,7 @@ const SeatSelectionPage = () => {
       setRefreshing(false);
       setLoading(false);
     }
-  }, [gameId, uiToast]);
+  }, [gameId, uiToast, fetchSoldSeats]);
   
   // Atualizar assentos em tempo real - agora a cada 30 segundos
   useEffect(() => {
@@ -96,8 +130,26 @@ const SeatSelectionPage = () => {
       fetchSeats();
     }, 30000); // Atualiza a cada 30 segundos
     
-    // Configurar listener para mudanças em tempo real
-    const channel = supabase
+    // Configurar listener para mudanças em tempo real na tabela tickets
+    const ticketsChannel = supabase
+      .channel('tickets-updates')
+      .on('postgres_changes', 
+        { 
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public', 
+          table: 'tickets',
+          filter: `game_id=eq.${gameId}` 
+        }, 
+        () => {
+          // Quando ocorrer qualquer mudança nos tickets, recarregar os assentos vendidos
+          console.log('Mudança detectada na tabela tickets, atualizando assentos vendidos');
+          fetchSoldSeats();
+        }
+      )
+      .subscribe();
+    
+    // Configurar listener para mudanças em tempo real na tabela seats
+    const seatsChannel = supabase
       .channel('seat-selection-updates')
       .on('postgres_changes', 
         { 
@@ -107,7 +159,7 @@ const SeatSelectionPage = () => {
           filter: `game_id=eq.${gameId}` 
         }, 
         () => {
-          // Quando ocorrer qualquer mudança, recarregar os assentos
+          // Quando ocorrer qualquer mudança nos assentos, recarregar os assentos
           fetchSeats();
         }
       )
@@ -116,6 +168,7 @@ const SeatSelectionPage = () => {
     // Cleanup
     return () => {
       clearInterval(intervalId);
+      supabase.channel('tickets-updates').unsubscribe();
       supabase.channel('seat-selection-updates').unsubscribe();
     };
   }, [fetchSeats, gameId]);
@@ -150,14 +203,7 @@ const SeatSelectionPage = () => {
       if (fetchError) throw fetchError;
       
       if (data) {
-        // Garantir que todos os assentos estão disponíveis 
-        const initialSeats = data.map(seat => ({
-          ...seat,
-          status: 'available',
-          reserved_by: null,
-          reserved_until: null,
-        }));
-        setSeatData(initialSeats);
+        setSeatData(data);
       }
     } catch (error) {
       console.error('Erro ao inicializar assentos:', error);
@@ -280,6 +326,7 @@ const SeatSelectionPage = () => {
                     onSeatSelect={handleSeatSelect} 
                     gameId={game.id}
                     seatData={seatData}
+                    soldSeats={soldSeats}
                   />
                   <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
                     <div className="text-center">
@@ -294,6 +341,7 @@ const SeatSelectionPage = () => {
                   onSeatSelect={handleSeatSelect} 
                   gameId={game.id}
                   seatData={seatData}
+                  soldSeats={soldSeats}
                 />
               )}
             </div>
