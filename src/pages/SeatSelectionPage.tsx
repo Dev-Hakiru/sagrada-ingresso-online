@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -11,7 +12,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Progress } from '@/components/ui/progress';
 
 const SeatSelectionPage = () => {
   const { gameId } = useParams<{ gameId: string }>();
@@ -120,15 +120,10 @@ const SeatSelectionPage = () => {
     }
   }, [gameId, uiToast, fetchSoldSeats]);
   
-  // Atualizar assentos em tempo real - agora a cada 30 segundos
+  // Configurar listeners em tempo real - sem atualização automática por cronômetro
   useEffect(() => {
     // Buscar assentos inicialmente
     fetchSeats();
-    
-    // Configurar atualização periódica a cada 30 segundos
-    const intervalId = setInterval(() => {
-      fetchSeats();
-    }, 30000); // Atualiza a cada 30 segundos
     
     // Configurar listener para mudanças em tempo real na tabela tickets
     const ticketsChannel = supabase
@@ -167,7 +162,6 @@ const SeatSelectionPage = () => {
     
     // Cleanup
     return () => {
-      clearInterval(intervalId);
       supabase.channel('tickets-updates').unsubscribe();
       supabase.channel('seat-selection-updates').unsubscribe();
     };
@@ -263,20 +257,6 @@ const SeatSelectionPage = () => {
     }
   };
 
-  // Calcular tempo desde a última atualização
-  const getTimeSinceLastRefresh = () => {
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - lastRefreshTime.getTime()) / 1000);
-    return seconds;
-  };
-
-  // Calcular porcentagem para a barra de progresso da próxima atualização
-  const getRefreshProgress = () => {
-    const secondsSinceRefresh = getTimeSinceLastRefresh();
-    const progressPercentage = Math.min(100, (secondsSinceRefresh / 30) * 100);
-    return progressPercentage;
-  };
-
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -287,24 +267,20 @@ const SeatSelectionPage = () => {
             <span>{formatDate(game.date)} às {game.time}</span>
           </div>
           
-          {/* Barra de atualização */}
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm text-gray-500">
-                {refreshing 
-                  ? "Atualizando assentos..." 
-                  : `Última atualização: ${lastRefreshTime.toLocaleTimeString()}`}
-              </span>
-              <button 
-                onClick={handleManualRefresh}
-                className="text-sm text-blue-600 hover:text-blue-800"
-                disabled={refreshing}
-              >
-                Atualizar agora
-              </button>
-            </div>
-            <Progress value={getRefreshProgress()} className="h-1" />
-            <p className="text-xs text-gray-500 mt-1">Próxima atualização em {30 - getTimeSinceLastRefresh()} segundos</p>
+          {/* Informações de atualização simplificadas */}
+          <div className="mb-4 flex justify-between items-center">
+            <span className="text-sm text-gray-500">
+              {refreshing 
+                ? "Atualizando assentos..." 
+                : `Última atualização: ${lastRefreshTime.toLocaleTimeString()}`}
+            </span>
+            <button 
+              onClick={handleManualRefresh}
+              className="text-sm text-blue-600 hover:text-blue-800"
+              disabled={refreshing}
+            >
+              Atualizar agora
+            </button>
           </div>
         </div>
         
