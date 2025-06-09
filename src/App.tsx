@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,14 +21,14 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+const App: React.FC = () => {
   console.log("App component rendering");
   
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
-          <TooltipProvider delayDuration={500} skipDelayDuration={100}>
+          <TooltipProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
