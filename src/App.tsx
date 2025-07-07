@@ -18,6 +18,11 @@ import TicketsPage from "./pages/TicketsPage";
 import LoginPage from "./pages/LoginPage";
 import SupportPage from "./pages/SupportPage";
 import NotFound from "./pages/NotFound";
+import AdminPage from "./pages/AdminPage";
+
+// Admin Components
+import AdminLayout from "./components/admin/AdminLayout";
+import GamesManagement from "./components/admin/GamesManagement";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +46,13 @@ const App: React.FC = () => {
                 <Route path="/tickets" element={<RequireAuth><TicketsPage /></RequireAuth>} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/support" element={<RequireAuth><SupportPage /></RequireAuth>} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin" element={<RequireAuth><AdminPage /></RequireAuth>} />
+                <Route path="/admin/*" element={<RequireAuth><AdminLayout /></RequireAuth>}>
+                  <Route path="games" element={<GamesManagement />} />
+                </Route>
+                
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
