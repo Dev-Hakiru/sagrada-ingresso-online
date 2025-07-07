@@ -76,12 +76,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Função para logout
+  // Função para logout com configuração específica para Netlify
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      // Primeiro limpa o estado local
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      
+      // Depois faz o logout no Supabase
+      await supabase.auth.signOut({ scope: 'global' });
+      
       toast.success("Logout realizado com sucesso!");
+      
+      // Força um reload da página para garantir que o estado seja limpo
+      window.location.href = '/';
     } catch (error: any) {
+      console.error("Erro no logout:", error);
       toast.error("Erro ao fazer logout", {
         description: error.message
       });
