@@ -19,6 +19,7 @@ import LoginPage from "./pages/LoginPage";
 import SupportPage from "./pages/SupportPage";
 import NotFound from "./pages/NotFound";
 import AdminPage from "./pages/AdminPage";
+import CheckRolePage from "./pages/CheckRolePage";
 
 // Admin Components
 import AdminLayout from "./components/admin/AdminLayout";
@@ -46,6 +47,7 @@ const App: React.FC = () => {
                 <Route path="/tickets" element={<RequireAuth><TicketsPage /></RequireAuth>} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/support" element={<RequireAuth><SupportPage /></RequireAuth>} />
+                <Route path="/check-role" element={<RequireAuth><CheckRolePage /></RequireAuth>} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<RequireAuth><AdminPage /></RequireAuth>} />

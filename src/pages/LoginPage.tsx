@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -27,8 +26,8 @@ const LoginPage = () => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        // Redirect to home page instead of tickets
-        navigate('/');
+        // Redirect to check-role page to determine proper destination
+        navigate('/check-role');
       }
     };
     
@@ -38,8 +37,8 @@ const LoginPage = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN') {
-          // Redirect to home page instead of tickets
-          navigate('/');
+          // Redirect to check-role page to determine proper destination
+          navigate('/check-role');
         }
       }
     );
@@ -66,8 +65,8 @@ const LoginPage = () => {
       if (error) throw error;
       
       toast.success("Login realizado com sucesso!");
-      // Navigate to home after successful login
-      navigate('/');
+      // Navigate to check-role after successful login
+      navigate('/check-role');
     } catch (error: any) {
       toast.error("Erro ao fazer login", {
         description: error.message || "Verifique suas credenciais e tente novamente.",
