@@ -4,7 +4,6 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import AdminLayout from '@/components/admin/AdminLayout';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 
 const AdminPage = () => {
@@ -61,11 +60,7 @@ const AdminPage = () => {
     return <Navigate to="/" replace />;
   }
 
-  return (
-    <AdminLayout>
-      <AdminDashboard />
-    </AdminLayout>
-  );
+  return <AdminDashboard />;
 };
 
 export default AdminPage;
