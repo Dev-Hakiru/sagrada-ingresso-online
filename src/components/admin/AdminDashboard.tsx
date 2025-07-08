@@ -1,83 +1,110 @@
 
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Building2, Armchair, Ticket } from 'lucide-react';
-
-interface DashboardStats {
-  totalGames: number;
-  totalSectors: number;
-  totalSeats: number;
-  totalTickets: number;
-  availableSeats: number;
-  soldTickets: number;
-}
+import { Button } from '@/components/ui/button';
+import { Calendar, MapPin, Users, Ticket, TrendingUp, DollarSign } from 'lucide-react';
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState<DashboardStats>({
+  const [stats, setStats] = useState({
     totalGames: 0,
     totalSectors: 0,
     totalSeats: 0,
     totalTickets: 0,
-    availableSeats: 0,
-    soldTickets: 0,
+    pendingTickets: 0,
+    revenue: 0,
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardStats();
+    fetchStats();
   }, []);
 
-  const fetchDashboardStats = async () => {
+  const fetchStats = async () => {
     try {
       setLoading(true);
 
-      // Buscar contagem de jogos
+      // Buscar estatísticas de jogos
       const { count: gamesCount } = await supabase
         .from('games')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact' });
 
-      // Buscar contagem de setores
+      // Buscar estatísticas de setores
       const { count: sectorsCount } = await supabase
         .from('sectors')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact' });
 
-      // Buscar contagem de assentos
+      // Buscar estatísticas de assentos
       const { count: seatsCount } = await supabase
         .from('seats')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact' });
 
-      // Buscar contagem de assentos disponíveis
-      const { count: availableSeatsCount } = await supabase
-        .from('seats')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'available');
-
-      // Buscar contagem de bilhetes
+      // Buscar estatísticas de bilhetes
       const { count: ticketsCount } = await supabase
         .from('tickets')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact' });
 
-      // Buscar contagem de bilhetes pagos
-      const { count: soldTicketsCount } = await supabase
+      // Buscar bilhetes pendentes
+      const { count: pendingCount } = await supabase
         .from('tickets')
-        .select('*', { count: 'exact', head: true })
-        .eq('status_pagamento', 'pago');
+        .select('id', { count: 'exact' })
+        .eq('status_pagamento', 'pendente');
 
       setStats({
         totalGames: gamesCount || 0,
         totalSectors: sectorsCount || 0,
         totalSeats: seatsCount || 0,
         totalTickets: ticketsCount || 0,
-        availableSeats: availableSeatsCount || 0,
-        soldTickets: soldTicketsCount || 0,
+        pendingTickets: pendingCount || 0,
+        revenue: 0, // Calcular receita se necessário
       });
+
     } catch (error) {
       console.error('Erro ao buscar estatísticas:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const dashboardCards = [
+    {
+      title: 'Jogos',
+      value: stats.totalGames,
+      description: 'Total de jogos cadastrados',
+      icon: Calendar,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+      link: '/admin/games',
+    },
+    {
+      title: 'Setores',
+      value: stats.totalSectors,
+      description: 'Setores do estádio',
+      icon: MapPin,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100',
+      link: '/admin/sectors',
+    },
+    {
+      title: 'Assentos',
+      value: stats.totalSeats,
+      description: 'Total de assentos disponíveis',
+      icon: Users,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100',
+      link: '/admin/seats',
+    },
+    {
+      title: 'Bilhetes',
+      value: stats.totalTickets,
+      description: 'Bilhetes vendidos',
+      icon: Ticket,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-100',
+      link: '/admin/tickets',
+    },
+  ];
 
   if (loading) {
     return (
@@ -90,134 +117,91 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard Administrativo</h1>
         <p className="text-gray-600">Visão geral do sistema de bilhetes</p>
       </div>
 
-      {/* Stats Cards */}
+      {/* Cards de Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Jogos</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalGames}</div>
-            <p className="text-xs text-muted-foreground">
-              Jogos cadastrados no sistema
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Setores</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalSectors}</div>
-            <p className="text-xs text-muted-foreground">
-              Setores configurados
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Assentos Disponíveis</CardTitle>
-            <Armchair className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.availableSeats}</div>
-            <p className="text-xs text-muted-foreground">
-              de {stats.totalSeats} assentos totais
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Bilhetes Vendidos</CardTitle>
-            <Ticket className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.soldTickets}</div>
-            <p className="text-xs text-muted-foreground">
-              de {stats.totalTickets} bilhetes totais
-            </p>
-          </CardContent>
-        </Card>
+        {dashboardCards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <Card key={card.title} className="hover:shadow-lg transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-gray-700">
+                  {card.title}
+                </CardTitle>
+                <div className={`p-2 rounded-full ${card.bgColor}`}>
+                  <Icon className={`h-4 w-4 ${card.color}`} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-gray-900">{card.value}</div>
+                <p className="text-xs text-gray-600 mt-1">{card.description}</p>
+                <Link to={card.link}>
+                  <Button variant="outline" size="sm" className="mt-3 w-full">
+                    Gerenciar
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Recent Activity */}
+      {/* Cards de Ações Rápidas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Resumo do Sistema</CardTitle>
+            <CardTitle className="flex items-center">
+              <TrendingUp className="h-5 w-5 mr-2 text-sagrada-green" />
+              Bilhetes Pendentes
+            </CardTitle>
             <CardDescription>
-              Estatísticas gerais da plataforma
+              Bilhetes aguardando confirmação de pagamento
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Taxa de Ocupação</span>
-              <span className="font-semibold">
-                {stats.totalSeats > 0 
-                  ? Math.round(((stats.totalSeats - stats.availableSeats) / stats.totalSeats) * 100)
-                  : 0
-                }%
-              </span>
+          <CardContent>
+            <div className="text-3xl font-bold text-orange-600 mb-4">
+              {stats.pendingTickets}
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Bilhetes Pagos</span>
-              <span className="font-semibold text-green-600">
-                {stats.soldTickets}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Bilhetes Pendentes</span>
-              <span className="font-semibold text-yellow-600">
-                {stats.totalTickets - stats.soldTickets}
-              </span>
-            </div>
+            <Link to="/admin/tickets">
+              <Button className="bg-sagrada-green hover:bg-sagrada-green/90">
+                Ver Bilhetes Pendentes
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Ações Rápidas</CardTitle>
+            <CardTitle className="flex items-center">
+              <DollarSign className="h-5 w-5 mr-2 text-sagrada-green" />
+              Ações Rápidas
+            </CardTitle>
             <CardDescription>
-              Links para funcionalidades principais
+              Acesso rápido às principais funcionalidades
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <a 
-              href="/admin/games" 
-              className="block p-3 rounded-lg border hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center">
-                <Calendar className="h-5 w-5 text-sagrada-green mr-3" />
-                <span className="font-medium">Gerenciar Jogos</span>
-              </div>
-            </a>
-            <a 
-              href="/admin/sectors" 
-              className="block p-3 rounded-lg border hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center">
-                <Building2 className="h-5 w-5 text-sagrada-green mr-3" />
-                <span className="font-medium">Gerenciar Setores</span>
-              </div>
-            </a>
-            <a 
-              href="/admin/tickets" 
-              className="block p-3 rounded-lg border hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center">
-                <Ticket className="h-5 w-5 text-sagrada-green mr-3" />
-                <span className="font-medium">Ver Bilhetes</span>
-              </div>
-            </a>
+          <CardContent className="space-y-2">
+            <Link to="/admin/games">
+              <Button variant="outline" className="w-full justify-start">
+                <Calendar className="h-4 w-4 mr-2" />
+                Adicionar Novo Jogo
+              </Button>
+            </Link>
+            <Link to="/admin/sectors">
+              <Button variant="outline" className="w-full justify-start">
+                <MapPin className="h-4 w-4 mr-2" />
+                Configurar Setores
+              </Button>
+            </Link>
+            <Link to="/admin/seats">
+              <Button variant="outline" className="w-full justify-start">
+                <Users className="h-4 w-4 mr-2" />
+                Gerenciar Assentos
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>
