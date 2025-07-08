@@ -60,20 +60,30 @@ const GamesManagement = () => {
     e.preventDefault();
     
     try {
+      console.log('Dados do formulário:', formData);
+      
       if (editingGame) {
+        console.log('Atualizando jogo:', editingGame.id);
         const { error } = await supabase
           .from('games')
           .update(formData)
           .eq('id', editingGame.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro na atualização:', error);
+          throw error;
+        }
         toast.success('Jogo atualizado com sucesso!');
       } else {
+        console.log('Criando novo jogo');
         const { error } = await supabase
           .from('games')
           .insert([formData]);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro na criação:', error);
+          throw error;
+        }
         toast.success('Jogo criado com sucesso!');
       }
 
@@ -82,7 +92,7 @@ const GamesManagement = () => {
       resetForm();
     } catch (error: any) {
       console.error('Erro ao salvar jogo:', error);
-      toast.error('Erro ao salvar jogo');
+      toast.error(`Erro ao salvar jogo: ${error.message}`);
     }
   };
 

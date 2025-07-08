@@ -58,6 +58,8 @@ const SectorsManagement = () => {
     e.preventDefault();
     
     try {
+      console.log('Dados do formulário:', formData);
+      
       const sectorData = {
         nome_setor: formData.nome_setor,
         capacidade: parseInt(formData.capacidade),
@@ -65,20 +67,30 @@ const SectorsManagement = () => {
         status: formData.status,
       };
 
+      console.log('Dados processados:', sectorData);
+
       if (editingSector) {
+        console.log('Atualizando setor:', editingSector.id);
         const { error } = await supabase
           .from('sectors')
           .update(sectorData)
           .eq('id', editingSector.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro na atualização:', error);
+          throw error;
+        }
         toast.success('Setor atualizado com sucesso!');
       } else {
+        console.log('Criando novo setor');
         const { error } = await supabase
           .from('sectors')
           .insert([sectorData]);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro na criação:', error);
+          throw error;
+        }
         toast.success('Setor criado com sucesso!');
       }
 
@@ -87,7 +99,7 @@ const SectorsManagement = () => {
       resetForm();
     } catch (error: any) {
       console.error('Erro ao salvar setor:', error);
-      toast.error('Erro ao salvar setor');
+      toast.error(`Erro ao salvar setor: ${error.message}`);
     }
   };
 

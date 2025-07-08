@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +7,7 @@ import { Calendar, MapPin, Users, Ticket, TrendingUp, DollarSign } from 'lucide-
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer } from 'recharts';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import AdminMenu from './AdminMenu';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -197,7 +197,9 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      <AdminMenu />
+      
       <div>
         <h1 className="text-3xl font-bold text-gray-900">📊 Dashboard Administrativo</h1>
         <p className="text-gray-600">Visão geral do sistema de bilhetes</p>

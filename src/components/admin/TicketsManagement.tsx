@@ -89,17 +89,32 @@ const TicketsManagement = () => {
 
   const handleStatusUpdate = async (ticketId: string, newStatus: string) => {
     try {
+      console.log('Atualizando status do bilhete:', ticketId, 'para:', newStatus);
+      
       const { error } = await supabase
         .from('tickets')
         .update({ status_pagamento: newStatus })
         .eq('id', ticketId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na atualização:', error);
+        throw error;
+      }
+      
       toast.success('Status atualizado com sucesso!');
-      fetchData();
+      
+      // Atualizar o estado local imediatamente
+      setTickets(prevTickets => 
+        prevTickets.map(ticket => 
+          ticket.id === ticketId 
+            ? { ...ticket, status_pagamento: newStatus }
+            : ticket
+        )
+      );
+      
     } catch (error: any) {
       console.error('Erro ao atualizar status:', error);
-      toast.error('Erro ao atualizar status');
+      toast.error(`Erro ao atualizar status: ${error.message}`);
     }
   };
 
