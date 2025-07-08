@@ -5,6 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Users, Ticket, TrendingUp, DollarSign } from 'lucide-react';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer } from 'recharts';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -15,10 +18,17 @@ const AdminDashboard = () => {
     pendingTickets: 0,
     revenue: 0,
   });
+  const [chartData, setChartData] = useState({
+    ticketsByStatus: [],
+    sectorCapacity: [],
+    gamesByDate: [],
+    recentTickets: []
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
+    fetchChartData();
   }, []);
 
   const fetchStats = async () => {
@@ -30,22 +40,18 @@ const AdminDashboard = () => {
         .from('games')
         .select('id', { count: 'exact' });
 
-      // Buscar estatísticas de setores
       const { count: sectorsCount } = await supabase
         .from('sectors')
         .select('id', { count: 'exact' });
 
-      // Buscar estatísticas de assentos
       const { count: seatsCount } = await supabase
         .from('seats')
         .select('id', { count: 'exact' });
 
-      // Buscar estatísticas de bilhetes
       const { count: ticketsCount } = await supabase
         .from('tickets')
         .select('id', { count: 'exact' });
 
-      // Buscar bilhetes pendentes
       const { count: pendingCount } = await supabase
         .from('tickets')
         .select('id', { count: 'exact' })
@@ -57,11 +63,78 @@ const AdminDashboard = () => {
         totalSeats: seatsCount || 0,
         totalTickets: ticketsCount || 0,
         pendingTickets: pendingCount || 0,
-        revenue: 0, // Calcular receita se necessário
+        revenue: 0,
       });
 
     } catch (error) {
       console.error('Erro ao buscar estatísticas:', error);
+    }
+  };
+
+  const fetchChartData = async () => {
+    try {
+      // Bilhetes por status
+      const { data: ticketsData } = await supabase
+        .from('tickets')
+        .select('status_pagamento');
+
+      const statusCounts = ticketsData?.reduce((acc, ticket) => {
+        const status = ticket.status_pagamento || 'pendente';
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      }, {});
+
+      const ticketsByStatus = Object.entries(statusCounts || {}).map(([status, count]) => ({
+        status,
+        count,
+        fill: status === 'pago' ? '#10b981' : status === 'pendente' ? '#f59e0b' : '#ef4444'
+      }));
+
+      // Capacidade por setor
+      const { data: sectorsData } = await supabase
+        .from('sectors')
+        .select('nome_setor, capacidade');
+
+      const sectorCapacity = sectorsData?.map(sector => ({
+        name: sector.nome_setor,
+        capacity: sector.capacidade,
+        fill: '#3b82f6'
+      })) || [];
+
+      // Jogos por data (últimos 30 dias)
+      const { data: gamesData } = await supabase
+        .from('games')
+        .select('data')
+        .gte('data', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+        .order('data', { ascending: true });
+
+      const gamesByDate = gamesData?.reduce((acc, game) => {
+        const date = new Date(game.data).toLocaleDateString('pt-BR');
+        const existing = acc.find(item => item.date === date);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          acc.push({ date, count: 1 });
+        }
+        return acc;
+      }, []) || [];
+
+      // Últimos bilhetes
+      const { data: recentTicketsData } = await supabase
+        .from('tickets')
+        .select('id, game_title, status_pagamento, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      setChartData({
+        ticketsByStatus,
+        sectorCapacity,
+        gamesByDate,
+        recentTickets: recentTicketsData || []
+      });
+
+    } catch (error) {
+      console.error('Erro ao buscar dados dos gráficos:', error);
     } finally {
       setLoading(false);
     }
@@ -106,6 +179,15 @@ const AdminDashboard = () => {
     },
   ];
 
+  const chartConfig = {
+    count: {
+      label: "Quantidade",
+    },
+    capacity: {
+      label: "Capacidade",
+    },
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -117,7 +199,7 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard Administrativo</h1>
+        <h1 className="text-3xl font-bold text-gray-900">📊 Dashboard Administrativo</h1>
         <p className="text-gray-600">Visão geral do sistema de bilhetes</p>
       </div>
 
@@ -147,6 +229,126 @@ const AdminDashboard = () => {
             </Card>
           );
         })}
+      </div>
+
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Bilhetes por Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Bilhetes por Status</CardTitle>
+            <CardDescription>Distribuição dos bilhetes por status de pagamento</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[300px]">
+              <BarChart data={chartData.ticketsByStatus}>
+                <XAxis dataKey="status" />
+                <YAxis />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="count" fill="#8884d8" />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Capacidade por Setor */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Capacidade Total por Setor</CardTitle>
+            <CardDescription>Distribuição da capacidade dos setores</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[300px]">
+              <PieChart>
+                <Pie
+                  data={chartData.sectorCapacity}
+                  dataKey="capacity"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label
+                >
+                  {chartData.sectorCapacity.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Jogos por Data */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Jogos Cadastrados por Data</CardTitle>
+            <CardDescription>Evolução dos jogos cadastrados nos últimos 30 dias</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[300px]">
+              <LineChart data={chartData.gamesByDate}>
+                <XAxis dataKey="date" />
+                <YAxis />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line type="monotone" dataKey="count" stroke="#8884d8" strokeWidth={2} />
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Últimos Bilhetes */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Últimos Bilhetes Vendidos</CardTitle>
+            <CardDescription>Os 5 bilhetes mais recentes</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {chartData.recentTickets.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                Nenhum bilhete encontrado
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Jogo</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Data</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {chartData.recentTickets.map((ticket) => (
+                    <TableRow key={ticket.id}>
+                      <TableCell className="max-w-xs truncate">{ticket.game_title}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          ticket.status_pagamento === 'pago' 
+                            ? 'bg-green-100 text-green-800' 
+                            : ticket.status_pagamento === 'pendente'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {ticket.status_pagamento || 'pendente'}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(ticket.created_at).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+            <div className="mt-4">
+              <Link to="/admin/tickets">
+                <Button variant="outline" className="w-full">
+                  Ver Todos os Bilhetes
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Cards de Ações Rápidas */}
