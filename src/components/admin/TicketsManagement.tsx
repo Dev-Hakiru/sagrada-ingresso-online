@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Download, Search, Edit, Trash2 } from 'lucide-react';
+import { Download, Search, Trash2 } from 'lucide-react';
 
 interface Ticket {
   id: string;
@@ -32,8 +32,8 @@ const TicketsManagement = () => {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchFilter, setSearchFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [gameFilter, setGameFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [gameFilter, setGameFilter] = useState('all');
 
   useEffect(() => {
     fetchData();
@@ -133,8 +133,8 @@ const TicketsManagement = () => {
   const filteredTickets = tickets.filter(ticket => {
     const matchesSearch = ticket.game_title.toLowerCase().includes(searchFilter.toLowerCase()) ||
                          ticket.id.toLowerCase().includes(searchFilter.toLowerCase());
-    const matchesStatus = statusFilter === '' || ticket.status_pagamento === statusFilter;
-    const matchesGame = gameFilter === '' || ticket.game_id === gameFilter;
+    const matchesStatus = statusFilter === 'all' || ticket.status_pagamento === statusFilter;
+    const matchesGame = gameFilter === 'all' || ticket.game_id === gameFilter;
     
     return matchesSearch && matchesStatus && matchesGame;
   });
@@ -192,7 +192,7 @@ const TicketsManagement = () => {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="pendente">Pendente</SelectItem>
                   <SelectItem value="pago">Pago</SelectItem>
                   <SelectItem value="cancelado">Cancelado</SelectItem>
@@ -203,7 +203,7 @@ const TicketsManagement = () => {
                   <SelectValue placeholder="Jogo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   {games.map((game) => (
                     <SelectItem key={game.id} value={game.id}>
                       {game.nome_jogo}
@@ -217,7 +217,7 @@ const TicketsManagement = () => {
         <CardContent>
           {filteredTickets.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              {searchFilter || statusFilter || gameFilter ? 'Nenhum bilhete encontrado.' : 'Nenhum bilhete vendido ainda.'}
+              {searchFilter || statusFilter !== 'all' || gameFilter !== 'all' ? 'Nenhum bilhete encontrado.' : 'Nenhum bilhete vendido ainda.'}
             </div>
           ) : (
             <Table>

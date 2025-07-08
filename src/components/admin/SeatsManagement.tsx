@@ -41,8 +41,8 @@ const SeatsManagement = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingSeat, setEditingSeat] = useState<Seat | null>(null);
   const [searchFilter, setSearchFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [gameFilter, setGameFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [gameFilter, setGameFilter] = useState('all');
   const [formData, setFormData] = useState({
     game_id: '',
     section: '',
@@ -104,7 +104,7 @@ const SeatsManagement = () => {
         section: formData.section,
         row: formData.row,
         number: parseInt(formData.number),
-        setor_id: formData.setor_id,
+        setor_id: formData.setor_id || null,
         status: formData.status,
         codigo_assento: `${formData.section}${formData.row}${formData.number.padStart(2, '0')}`,
       };
@@ -182,8 +182,8 @@ const SeatsManagement = () => {
     const matchesSearch = seat.codigo_assento?.toLowerCase().includes(searchFilter.toLowerCase()) ||
                          seat.section.toLowerCase().includes(searchFilter.toLowerCase()) ||
                          seat.row.toLowerCase().includes(searchFilter.toLowerCase());
-    const matchesStatus = statusFilter === '' || seat.status === statusFilter;
-    const matchesGame = gameFilter === '' || seat.game_id === gameFilter;
+    const matchesStatus = statusFilter === 'all' || seat.status === statusFilter;
+    const matchesGame = gameFilter === 'all' || seat.game_id === gameFilter;
     
     return matchesSearch && matchesStatus && matchesGame;
   });
@@ -356,7 +356,7 @@ const SeatsManagement = () => {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="available">Disponível</SelectItem>
                   <SelectItem value="reserved">Reservado</SelectItem>
                   <SelectItem value="occupied">Ocupado</SelectItem>
@@ -367,7 +367,7 @@ const SeatsManagement = () => {
                   <SelectValue placeholder="Jogo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   {games.map((game) => (
                     <SelectItem key={game.id} value={game.id}>
                       {game.nome_jogo}
@@ -381,7 +381,7 @@ const SeatsManagement = () => {
         <CardContent>
           {filteredSeats.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              {searchFilter || statusFilter || gameFilter ? 'Nenhum assento encontrado.' : 'Nenhum assento cadastrado. Clique em "Novo Assento" para começar.'}
+              {searchFilter || statusFilter !== 'all' || gameFilter !== 'all' ? 'Nenhum assento encontrado.' : 'Nenhum assento cadastrado. Clique em "Novo Assento" para começar.'}
             </div>
           ) : (
             <Table>
